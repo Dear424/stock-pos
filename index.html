@@ -1,504 +1,1065 @@
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Stock POS Scanner (100 SKU)</title>
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <style>
-    :root {
-      --bg: #0f172a;
-      --panel: #1e293b;
-      --card: #334155;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --accent: #22c55e;
-      --accent-dark: #16a34a;
-      --danger: #ef4444;
-      --warn: #f59e0b;
-      --info: #38bdf8;
-      --border: #475569;
-    }
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    /* PIN Lock Screen */
-    #lockScreen {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      z-index: 99;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      gap: 14px;
-    }
-    #lockScreen input {
-      width: 220px;
-      font-size: 24px;
-      text-align: center;
-      letter-spacing: 8px;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--panel);
-      color: var(--text);
-    }
-    button {
-      border: none;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      color: var(--text);
-      background: var(--card);
-    }
-    button:active { transform: scale(0.98); }
-    .btn-green { background: var(--accent); color: #052e16; }
-    .btn-red { background: var(--danger); color: #fff; }
-    .btn-blue { background: var(--info); color: #082f49; }
-    .btn-warn { background: var(--warn); color: #451a03; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>ระบบเครื่องสแกนสินค้า POS</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
-    /* Top Mode Tabs */
-    .top-bar {
-      display: grid;
-      grid-template-columns: 1fr 1fr auto;
-      gap: 8px;
-      padding: 8px 10px;
-      background: var(--panel);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .tab-btn { padding: 10px 8px; font-size: 14px; opacity: 0.75; }
-    .tab-btn.active { opacity: 1; outline: 2px solid var(--accent); background: var(--card); }
+<style>
+:root {
+  --bg:#0f172a;
+  --panel:#1e293b;
+  --card:#334155;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --green:#22c55e;
+  --blue:#38bdf8;
+  --red:#ef4444;
+  --border:#475569;
+}
+* {box-sizing:border-box}
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  min-height:100vh;
+}
+button,input,select {font:inherit}
+button {
+  border:0;
+  border-radius:10px;
+  padding:12px;
+  font-weight:700;
+  cursor:pointer;
+  color:white;
+  background:var(--card);
+}
+button:disabled {opacity:.5}
+input,select {
+  width:100%;
+  padding:13px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--bg);
+  color:white;
+  font-size:16px;
+}
+input:focus {outline:2px solid var(--blue)}
+.green {background:var(--green);color:#052e16}
+.blue {background:var(--blue);color:#082f49}
+.red {background:var(--red)}
+.muted {color:var(--muted)}
+.small {font-size:12px}
+.hidden {display:none!important}
 
-    /* Split Screen Layout */
-    .split-wrap {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-    .scanner-zone {
-      height: 38%;
-      min-height: 170px;
-      background: #000;
-      border-bottom: 2px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      padding: 8px 10px;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-    .cam-controls {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-    .cam-controls input {
-      flex: 1;
-      padding: 9px 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--panel);
-      color: var(--text);
-      font-size: 14px;
-    }
-    #reader {
-      flex: 1;
-      min-height: 0;
-      width: 100%;
-      overflow: hidden;
-      border-radius: 8px;
-      background: #090d16;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+/* LOGIN */
+#loginScreen {
+  position:fixed;
+  inset:0;
+  z-index:100;
+  background:var(--bg);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.login-card {
+  width:100%;
+  max-width:360px;
+  padding:25px;
+  border-radius:18px;
+  background:var(--panel);
+  text-align:center;
+}
+.login-card>* {margin-bottom:13px}
 
-    .list-zone {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-      padding: 10px;
-      gap: 8px;
-      overflow-y: auto;
-    }
-    .status-line {
-      font-size: 12px;
-      color: var(--muted);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .cart-item {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-    .item-name { font-weight: 700; font-size: 15px; }
-    .item-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .qty-box { display: flex; align-items: center; gap: 6px; }
-    .qty-num { min-width: 26px; text-align: center; font-weight: 800; font-size: 16px; }
-
-    .new-sku-box {
-      background: var(--panel);
-      border: 1px dashed var(--warn);
-      border-radius: 12px;
-      padding: 10px;
-      display: none;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .new-sku-box input {
-      padding: 9px 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--bg);
-      color: var(--text);
-      font-size: 14px;
-    }
-
-    .footer-bar {
-      background: var(--panel);
-      border-top: 1px solid var(--border);
-      padding: 10px 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      flex-shrink: 0;
-    }
-    .total-txt { font-size: 17px; font-weight: 800; color: var(--accent); }
-    .catalog-card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 8px 10px;
-      font-size: 13px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .low { color: var(--danger); font-weight: 700; }
-  </style>
+/* APP */
+header {
+  background:var(--panel);
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid var(--border);
+}
+header h2 {font-size:17px;margin:0}
+main {
+  max-width:850px;
+  margin:auto;
+  padding:12px;
+  padding-bottom:35px;
+}
+.user-line {
+  display:flex;
+  justify-content:space-between;
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:12px;
+}
+.tabs {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-bottom:12px;
+}
+.tab {
+  padding:15px 8px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  font-size:15px;
+}
+.tab.active-in {
+  background:var(--green);
+  color:#052e16;
+  border-color:var(--green);
+}
+.tab.active-out {
+  background:var(--blue);
+  color:#082f49;
+  border-color:var(--blue);
+}
+.panel {
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:13px;
+  margin-bottom:12px;
+}
+.panel-title {
+  font-size:14px;
+  font-weight:800;
+  margin-bottom:12px;
+}
+.scan-row {
+  display:flex;
+  gap:7px;
+}
+.scan-row input {min-width:0;flex:1}
+.scan-row button {white-space:nowrap}
+#reader {
+  width:100%;
+  overflow:hidden;
+  border-radius:10px;
+  margin-top:10px;
+}
+#reader:empty {display:none}
+.status {
+  margin-top:9px;
+  padding:10px;
+  background:var(--bg);
+  border-radius:8px;
+  color:var(--muted);
+  font-size:13px;
+  min-height:38px;
+}
+.product-row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:12px 0;
+  border-bottom:1px solid var(--border);
+}
+.product-row:last-child {border-bottom:0}
+.product-info {flex:1;min-width:0}
+.product-name {font-weight:700;font-size:14px}
+.product-detail {font-size:12px;color:var(--muted);margin-top:4px}
+.qty-controls {
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.qty-controls button {
+  width:34px;
+  height:34px;
+  padding:0;
+  font-size:19px;
+}
+.qty-value {
+  min-width:25px;
+  text-align:center;
+  font-weight:800;
+}
+.total-box {
+  background:#052e16;
+  border:1px solid #166534;
+  padding:16px;
+  border-radius:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:12px;
+}
+.total-value {
+  color:#4ade80;
+  font-size:23px;
+  font-weight:900;
+}
+.primary-action {
+  width:100%;
+  padding:16px;
+  font-size:16px;
+  margin-top:12px;
+}
+.form-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+}
+.form-grid .full {grid-column:1/-1}
+.stock-list {
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+.stock-row {
+  display:flex;
+  justify-content:space-between;
+  background:var(--bg);
+  padding:10px;
+  border-radius:8px;
+  font-size:13px;
+  gap:8px;
+}
+.empty {
+  text-align:center;
+  color:var(--muted);
+  padding:25px 10px;
+  font-size:13px;
+}
+.footer-note {
+  text-align:center;
+  color:var(--muted);
+  font-size:11px;
+  padding:15px;
+}
+</style>
 </head>
+
 <body>
 
-  <!-- หน้าใส่รหัส PIN ก่อนเข้าใช้งาน -->
-  <div id="lockScreen">
-    <h2 style="margin:0;">ระบบสต็อก & ขายหน้าร้าน</h2>
-    <div style="color:var(--muted);font-size:13px;">กรอกรหัส PIN 4 หลักเพื่อเข้าใช้งาน</div>
-    <input id="pinInput" type="password" inputmode="numeric" maxlength="6" placeholder="••••" />
-    <button class="btn-green" style="width:220px;padding:12px;" onclick="unlockApp()">เข้าใช้งาน</button>
-    <div id="lockMsg" style="color:var(--danger);font-size:13px;min-height:18px;"></div>
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div style="font-size:42px">📦</div>
+    <h2>เครื่องสแกนสินค้า POS</h2>
+    <p class="muted small">เข้าสู่ระบบเพื่อเริ่มใช้งาน</p>
+
+    <select id="username">
+      <option value="admin">ผู้ดูแลระบบ</option>
+      <option value="staff1">พนักงาน 1</option>
+      <option value="staff2">พนักงาน 2</option>
+    </select>
+
+    <input id="pin" type="password"
+      inputmode="numeric" maxlength="8"
+      placeholder="กรอกรหัส PIN">
+
+    <button class="green" style="width:100%"
+      onclick="login()">เข้าสู่ระบบ</button>
+
+    <div id="loginMsg" class="small"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<header>
+  <h2>📦 เครื่องสแกนสินค้า</h2>
+  <button onclick="logout()">ออกจากระบบ</button>
+</header>
+
+<main id="app" class="hidden">
+
+  <div class="user-line">
+    <span id="userLabel">ผู้ใช้งาน</span>
+    <span id="connectionLabel">กำลังเชื่อมต่อ</span>
   </div>
 
-  <!-- แถบสลับโหมดด้านบน -->
-  <div class="top-bar">
-    <button id="tabSell" class="tab-btn active btn-green" onclick="setMode('sell')">ขายออก (ตัดสต็อก)</button>
-    <button id="tabIn" class="tab-btn btn-blue" onclick="setMode('in')">รับเข้า / แอด SKU</button>
-    <button onclick="loadProducts()" title="รีเฟรชสต็อก">รีเฟรช</button>
+  <!-- สองโหมด -->
+  <div class="tabs">
+    <button id="tabIn" class="tab"
+      onclick="setMode('in')">📥 รับสินค้าเข้า</button>
+    <button id="tabOut" class="tab"
+      onclick="setMode('out')">🛒 ขายสินค้าออก</button>
   </div>
 
-  <div class="split-wrap">
-    <!-- ครึ่งบน: กล้องสแกนบาร์โค้ดแถบขีด + พิมพ์รหัสสำรอง -->
-    <div class="scanner-zone">
-      <div class="cam-controls">
-        <button id="camToggleBtn" class="btn-warn" onclick="toggleCamera()">เปิดกล้องสแกน</button>
-        <input id="manualSku" type="text" inputmode="numeric" placeholder="พิมพ์/วางเลข SKU แล้วกด Enter" onkeydown="if(event.key==='Enter') handleSku(this.value)" />
-        <button class="btn-blue" onclick="handleSku(document.getElementById('manualSku').value)">ตกลง</button>
-      </div>
-      <div id="reader"><span style="color:var(--muted);font-size:13px;">กด "เปิดกล้องสแกน" เพื่อสแกนบาร์โค้ดแถบขีด</span></div>
+  <!-- SCANNER -->
+  <section class="panel">
+    <div class="panel-title">เครื่องสแกนบาร์โค้ด</div>
+
+    <div class="scan-row">
+      <input id="skuInput"
+        type="text"
+        inputmode="none"
+        autocomplete="off"
+        placeholder="สแกนหรือพิมพ์รหัสสินค้า"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();scanSku()}">
+
+      <button class="blue" onclick="scanSku()">สแกน</button>
     </div>
 
-    <!-- ครึ่งล่าง: รายการสินค้า / ฟอร์มแอด SKU ใหม่ / รายการสต็อก -->
-    <div class="list-zone">
-      <div class="status-line">
-        <span id="statusText">พร้อมใช้งาน</span>
-        <span id="skuCount">สินค้า: 0 รายการ</span>
+    <button id="cameraBtn"
+      style="width:100%;margin-top:9px"
+      onclick="toggleCamera()">📷 เปิดกล้องสแกน</button>
+
+    <div id="reader"></div>
+    <div id="status" class="status">พร้อมสแกนสินค้า</div>
+  </section>
+
+  <!-- FORM NEW PRODUCT -->
+  <section id="newProductBox" class="panel hidden">
+    <div class="panel-title">➕ เพิ่มสินค้าใหม่</div>
+
+    <div class="small muted">บาร์โค้ดสินค้า</div>
+    <input id="newSku" readonly>
+
+    <div style="height:9px"></div>
+    <div class="small muted">ชื่อสินค้า</div>
+    <input id="newName" placeholder="เช่น น้ำดื่ม 600ml">
+
+    <div style="height:9px"></div>
+    <div class="form-grid">
+      <div>
+        <div class="small muted">ราคาขาย (กีบ)</div>
+        <input id="newPrice" type="number" min="0" placeholder="5000">
       </div>
-
-      <!-- กล่องแอดสินค้าใหม่เมื่อสแกนเจอ SKU ที่ยังไม่มีในชีต -->
-      <div id="newSkuBox" class="new-sku-box">
-        <div style="font-weight:700;color:var(--warn);">พบบาร์โค้ดใหม่: <span id="newSkuCode"></span></div>
-        <input id="newSkuName" type="text" placeholder="ชื่อสินค้า (เช่น น้ำดื่ม 600ml)" />
-        <div style="display:flex;gap:8px;">
-          <input id="newSkuPrice" type="number" inputmode="numeric" placeholder="ราคา (กีบ)" style="flex:1;" />
-          <input id="newSkuQty" type="number" inputmode="numeric" value="1" placeholder="จำนวน" style="width:90px;" />
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn-green" style="flex:1;" onclick="saveNewSku()">บันทึกลงชีต</button>
-          <button onclick="hideNewSku()">ยกเลิก</button>
-        </div>
+      <div>
+        <div class="small muted">จำนวนรับเข้า</div>
+        <input id="newQty" type="number" min="1" value="1">
       </div>
-
-      <div id="activeList"></div>
-
-      <div style="margin-top:6px;font-size:13px;font-weight:700;color:var(--muted);">สต็อกในชีตทั้งหมด</div>
-      <div id="catalogList" style="display:flex;flex-direction:column;gap:6px;"></div>
     </div>
-  </div>
 
-  <!-- แถบสรุปยอดและปุ่มยืนยันด้านล่าง -->
-  <div class="footer-bar">
-    <div>
-      <div style="font-size:12px;color:var(--muted);" id="summaryLabel">ยอดรวมขายออก</div>
-      <div class="total-txt" id="summaryTotal">0 กีบ</div>
+    <div style="height:12px"></div>
+    <button class="green" style="width:100%"
+      onclick="saveNewProduct()">บันทึกสินค้า</button>
+    <button style="width:100%;margin-top:7px"
+      onclick="hideNewProduct()">ยกเลิก</button>
+  </section>
+
+  <!-- ACTIVE CART -->
+  <section class="panel">
+    <div class="panel-title" id="listTitle">รายการสินค้า</div>
+
+    <div id="cartList">
+      <div class="empty">ยังไม่มีสินค้า<br>เริ่มสแกนบาร์โค้ดได้เลย</div>
     </div>
-    <button id="confirmBtn" class="btn-green" style="padding:12px 20px;font-size:15px;" onclick="submitAction()">ยืนยันตัดสต็อก</button>
+
+    <div class="total-box">
+      <div>
+        <div class="small" style="color:#bbf7d0" id="totalLabel">ยอดรวม</div>
+        <div class="small" style="color:#86efac">LAK</div>
+      </div>
+      <div class="total-value" id="totalValue">0</div>
+    </div>
+
+    <button id="confirmBtn"
+      class="green primary-action"
+      onclick="confirmAction()">ยืนยันขายสินค้า</button>
+
+    <button onclick="clearCart()"
+      class="red" style="width:100%;margin-top:8px">
+      ล้างรายการทั้งหมด
+    </button>
+  </section>
+
+  <!-- STOCK SUMMARY -->
+  <section class="panel">
+    <div class="panel-title">
+      📋 สินค้าในระบบ
+      <button style="float:right;padding:5px 10px"
+        onclick="loadProducts()">รีเฟรช</button>
+    </div>
+
+    <div class="small muted" id="stockCount">0 รายการ</div>
+    <div id="stockList" class="stock-list"
+      style="margin-top:10px"></div>
+  </section>
+
+  <div class="footer-note">
+    ระบบจัดการสต็อกสินค้า · Google Sheets
   </div>
+</main>
 
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyUOsMB-YMC_jSIRFR4_UAyN6X_9Zp09GYt8N1jaQDV1P_Tc84LIZPSW88tCvu0aG_bgw/exec";
-    const DELETE_PIN = "9999"; // รหัสยืนยันการลบรายการ (แก้ให้ตรงกับฝั่ง Apps Script)
+<script>
+/* ==================================================
+   CONFIG
+   ================================================== */
 
-    let PIN = "";
-    let mode = "sell"; // "sell" หรือ "in"
-    let products = [];
-    let cart = []; // [{sku, name, price, qty}]
-    let html5QrCode = null;
-    let camRunning = false;
-    let lastScan = { code: "", time: 0 };
+const API_URL =
+"https://script.google.com/macros/s/AKfycbyUOsMB-YMC_jSIRFR4_UAyN6X_9Zp09GYt8N1jaQDV1P_Tc84LIZPSW88tCvu0aG_bgw/exec";
 
-    function setStatus(msg) {
-      document.getElementById("statusText").textContent = msg;
+let PIN = "";
+let USERNAME = "";
+let CURRENT_USER = null;
+
+let products = [];
+let cart = [];
+let mode = "out";
+
+let scanner = null;
+let cameraRunning = false;
+let lastScan = {sku:"",time:0};
+let busy = false;
+
+/* ==================================================
+   API
+   ================================================== */
+
+async function apiGet(params) {
+  const query = new URLSearchParams(params).toString();
+
+  const response = await fetch(API_URL + "?" + query, {
+    method:"GET",
+    cache:"no-store"
+  });
+
+  if (!response.ok) throw new Error("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้");
+
+  return response.json();
+}
+
+async function apiPost(data) {
+  const response = await fetch(API_URL, {
+    method:"POST",
+    headers:{
+      "Content-Type":"text/plain;charset=utf-8"
+    },
+    body:JSON.stringify({
+      ...data,
+      username:USERNAME,
+      pin:PIN
+    })
+  });
+
+  if (!response.ok) throw new Error("บันทึกข้อมูลไม่ได้");
+
+  return response.json();
+}
+
+function setStatus(message) {
+  document.getElementById("status").textContent = message;
+}
+
+/* ==================================================
+   LOGIN
+   ================================================== */
+
+async function login() {
+  if (busy) return;
+
+  USERNAME = document.getElementById("username").value;
+  PIN = document.getElementById("pin").value.trim();
+
+  if (!PIN) {
+    document.getElementById("loginMsg").textContent =
+      "กรุณากรอก PIN";
+    return;
+  }
+
+  busy = true;
+  document.getElementById("loginMsg").textContent =
+    "กำลังตรวจสอบข้อมูล...";
+
+  try {
+    const result = await apiGet({
+      action:"login",
+      username:USERNAME,
+      pin:PIN
+    });
+
+    if (!result.ok) throw new Error(result.error || "เข้าสู่ระบบไม่สำเร็จ");
+
+    CURRENT_USER = result.user;
+
+    document.getElementById("loginScreen").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+
+    document.getElementById("userLabel").textContent =
+      "ผู้ใช้งาน: " + CURRENT_USER.name;
+
+    document.getElementById("connectionLabel").textContent =
+      "● เชื่อมต่อแล้ว";
+
+    document.getElementById("pin").value = "";
+
+    await loadProducts();
+    setMode("out");
+
+  } catch (error) {
+    document.getElementById("loginMsg").textContent =
+      error.message;
+    PIN = "";
+  } finally {
+    busy = false;
+  }
+}
+
+function logout() {
+  stopCamera();
+  PIN = "";
+  USERNAME = "";
+  CURRENT_USER = null;
+  products = [];
+  cart = [];
+
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("loginScreen").classList.remove("hidden");
+  document.getElementById("loginMsg").textContent = "";
+  document.getElementById("pin").value = "";
+}
+
+/* ==================================================
+   LOAD PRODUCTS
+   ================================================== */
+
+async function loadProducts() {
+  try {
+    const result = await apiGet({
+      action:"getProducts",
+      username:USERNAME,
+      pin:PIN
+    });
+
+    if (!result.ok) throw new Error(result.error);
+
+    products = result.products || [];
+
+    renderStock();
+    renderCart();
+
+    document.getElementById("connectionLabel").textContent =
+      "● เชื่อมต่อแล้ว";
+
+  } catch(error) {
+    setStatus("โหลดสินค้าไม่สำเร็จ: " + error.message);
+    document.getElementById("connectionLabel").textContent =
+      "● เชื่อมต่อล้มเหลว";
+  }
+}
+
+/* ==================================================
+   SWITCH MODE
+   ================================================== */
+
+function setMode(next) {
+  if (busy) return;
+
+  mode = next;
+  cart = [];
+  hideNewProduct();
+
+  document.getElementById("tabIn").className =
+    "tab" + (mode === "in" ? " active-in" : "");
+
+  document.getElementById("tabOut").className =
+    "tab" + (mode === "out" ? " active-out" : "");
+
+  document.getElementById("listTitle").textContent =
+    mode === "in" ? "รายการรับสินค้าเข้า" : "รายการขายสินค้า";
+
+  document.getElementById("totalLabel").textContent =
+    mode === "in" ? "จำนวนสินค้ารับเข้า" : "ยอดรวมขาย";
+
+  document.getElementById("confirmBtn").textContent =
+    mode === "in" ? "ยืนยันรับสินค้าเข้า" : "ยืนยันขายสินค้า";
+
+  document.getElementById("confirmBtn").className =
+    "primary-action " + (mode === "in" ? "blue" : "green");
+
+  setStatus(
+    mode === "in"
+    ? "โหมดรับสินค้าเข้า — เริ่มสแกนได้เลย"
+    : "โหมดขายสินค้า — เริ่มสแกนได้เลย"
+  );
+
+  renderCart();
+}
+
+/* ==================================================
+   SCAN SKU
+   ================================================== */
+
+function scanSku(value) {
+  if (busy) return;
+
+  const input = document.getElementById("skuInput");
+  const sku = String(value || input.value).trim();
+
+  input.value = "";
+
+  if (!sku) return;
+
+  const now = Date.now();
+
+  if (sku === lastScan.sku && now - lastScan.time < 900) {
+    return;
+  }
+
+  lastScan = {sku,time:now};
+
+  const found = products.find(p => p.sku === sku);
+
+  if (!found) {
+    if (mode === "in") {
+      showNewProduct(sku);
+    } else {
+      setStatus("ไม่พบสินค้า SKU: " + sku);
     }
+    focusScanner();
+    return;
+  }
 
-    async function unlockApp() {
-      const val = document.getElementById("pinInput").value.trim();
-      if (!val) return;
-      PIN = val;
-      setStatus("กำลังตรวจสอบ PIN และโหลดสินค้า...");
-      const res = await apiGet({ action: "getProducts", pin: PIN });
-      if (!res.ok) {
-        document.getElementById("lockMsg").textContent = res.error || "PIN ไม่ถูกต้อง";
-        return;
-      }
-      products = res.products || [];
-      document.getElementById("lockScreen").style.display = "none";
-      renderAll();
-      setStatus("เชื่อมต่อ Google Sheets สำเร็จ");
-    }
+  hideNewProduct();
 
-    async function loadProducts() {
-      setStatus("กำลังอัปเดตข้อมูลจากชีต...");
-      const res = await apiGet({ action: "getProducts", pin: PIN });
-      if (res.ok) {
-        products = res.products || [];
-        renderAll();
-        setStatus("อัปเดตสต็อกล่าสุดแล้ว");
-      } else {
-        setStatus("โหลดข้อมูลไม่สำเร็จ: " + (res.error || ""));
-      }
-    }
+  let item = cart.find(p => p.sku === sku);
 
-    async function apiGet(params) {
-      const qs = new URLSearchParams(params).toString();
-      const r = await fetch(`${API_URL}?${qs}`);
-      return r.json();
-    }
+  if (item) {
+    item.qty += 1;
+  } else {
+    cart.push({
+      sku:found.sku,
+      name:found.name,
+      price:found.price,
+      qty:1,
+      stock:found.stock
+    });
+  }
 
-    async function apiPost(payload) {
-      const r = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ ...payload, pin: PIN })
+  setStatus("สแกนสำเร็จ: " + found.name);
+  renderCart();
+  focusScanner();
+}
+
+/* ==================================================
+   NEW PRODUCT
+   ================================================== */
+
+function showNewProduct(sku) {
+  document.getElementById("newProductBox").classList.remove("hidden");
+  document.getElementById("newSku").value = sku;
+  document.getElementById("newName").value = "";
+  document.getElementById("newPrice").value = "";
+  document.getElementById("newQty").value = "1";
+
+  setStatus("พบสินค้าใหม่ กรุณากรอกข้อมูลสินค้า");
+  document.getElementById("newName").focus();
+}
+
+function hideNewProduct() {
+  document.getElementById("newProductBox").classList.add("hidden");
+}
+
+async function saveNewProduct() {
+  if (busy) return;
+
+  const sku = document.getElementById("newSku").value.trim();
+  const name = document.getElementById("newName").value.trim();
+  const price = Number(document.getElementById("newPrice").value);
+  const qty = Number(document.getElementById("newQty").value);
+
+  if (!sku || !name) {
+    setStatus("กรุณากรอกบาร์โค้ดและชื่อสินค้า");
+    return;
+  }
+
+  if (!Number.isFinite(price) || price < 0 ||
+      !Number.isSafeInteger(qty) || qty < 1) {
+    setStatus("กรุณาตรวจสอบราคาและจำนวนสินค้า");
+    return;
+  }
+
+  busy = true;
+  try {
+    const result = await apiPost({
+      action:"stockIn",
+      sku:sku,
+      name:name,
+      price:price,
+      qty:qty,
+      minStock:5
+    });
+
+    if (!result.ok) throw new Error(result.error);
+
+    products = result.products || products;
+    hideNewProduct();
+    renderStock();
+
+    setStatus("เพิ่มสินค้าใหม่เรียบร้อย: " + name);
+
+    // เพิ่มรายการเข้าในตะกร้ารับเข้า
+    const found = products.find(p => p.sku === sku);
+
+    if (found) {
+      cart.push({
+        sku:found.sku,
+        name:found.name,
+        price:found.price,
+        qty:0,
+        stock:found.stock
       });
-      return r.json();
+      renderCart();
     }
 
-    function setMode(nextMode) {
-      mode = nextMode;
-      cart = [];
-      hideNewSku();
-      document.getElementById("tabSell").classList.toggle("active", mode === "sell");
-      document.getElementById("tabIn").classList.toggle("active", mode === "in");
-      document.getElementById("summaryLabel").textContent = mode === "sell" ? "ยอดรวมขายออก" : "จำนวนรับเข้าทั้งหมด";
-      document.getElementById("confirmBtn").textContent = mode === "sell" ? "ยืนยันตัดสต็อก" : "ยืนยันรับเข้า";
-      document.getElementById("confirmBtn").className = mode === "sell" ? "btn-green" : "btn-blue";
-      renderActiveList();
-      updateSummary();
+  } catch(error) {
+    setStatus("บันทึกไม่สำเร็จ: " + error.message);
+  } finally {
+    busy = false;
+    focusScanner();
+  }
+}
+
+/* ==================================================
+   CART
+   ================================================== */
+
+function changeQty(index, delta) {
+  const item = cart[index];
+  if (!item || busy) return;
+
+  const next = item.qty + delta;
+
+  if (next <= 0) {
+    cart.splice(index,1);
+  } else {
+    if (mode === "out" && next > item.stock) {
+      setStatus("สต็อกไม่เพียงพอ เหลือ " + item.stock + " ชิ้น");
+      return;
     }
+    item.qty = next;
+  }
 
-    async function toggleCamera() {
-      const btn = document.getElementById("camToggleBtn");
-      if (!camRunning) {
-        try {
-          if (!html5QrCode) {
-            html5QrCode = new Html5Qrcode("reader");
-          }
-          const formats = [
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E
-          ];
-          await html5QrCode.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 250, height: 110 }, formatsToSupport: formats },
-            (decodedText) => {
-              const now = Date.now();
-              if (decodedText === lastScan.code && now - lastScan.time < 1400) return;
-              lastScan = { code: decodedText, time: now };
-              handleSku(decodedText);
-            },
-            () => {}
-          );
-          camRunning = true;
-          btn.textContent = "ปิดกล้อง";
-          btn.className = "btn-red";
-          setStatus("กล้องเปิดอยู่ — จ่อบาร์โค้ดแถบขีดได้เลย");
-        } catch (err) {
-          setStatus("เปิดกล้องไม่ได้: ตรวจสอบสิทธิ์กล้องและลิงก์ https");
-        }
-      } else {
-        await stopCamera();
-      }
-    }
+  renderCart();
+  focusScanner();
+}
 
-    async function stopCamera() {
-      if (html5QrCode && camRunning) {
-        await html5QrCode.stop();
-      }
-      camRunning = false;
-      const btn = document.getElementById("camToggleBtn");
-      btn.textContent = "เปิดกล้องสแกน";
-      btn.className = "btn-warn";
-      document.getElementById("reader").innerHTML = '<span style="color:var(--muted);font-size:13px;">ปิดกล้องแล้ว</span>';
-    }
+function removeItem(index) {
+  if (busy) return;
+  cart.splice(index,1);
+  renderCart();
+}
 
-    function handleSku(rawSku) {
-      const sku = String(rawSku || "").trim();
-      document.getElementById("manualSku").value = "";
-      if (!sku) return;
+function clearCart() {
+  if (busy || cart.length === 0) return;
 
-      const found = products.find(p => String(p.sku).trim() === sku);
-      if (found) {
-        hideNewSku();
-        const existing = cart.find(c => c.sku === found.sku);
-        if (existing) {
-          existing.qty += 1;
-        } else {
-          cart.push({ sku: found.sku, name: found.name, price: Number(found.price) || 0, qty: 1 });
-        }
-        setStatus(`สแกน: ${found.name} (${found.sku})`);
-        renderActiveList();
-        updateSummary();
-      } else {
-        if (mode === "in") {
-          document.getElementById("newSkuCode").textContent = sku;
-          document.getElementById("newSkuName").value = "";
-          document.getElementById("newSkuPrice").value = "";
-          document.getElementById("newSkuQty").value = "1";
-          document.getElementById("newSkuBox").style.display = "flex";
-          setStatus(`ไม่พบ SKU ${sku} — กรอกข้อมูลเพื่อแอดสินค้าใหม่`);
-        } else {
-          setStatus(`ไม่พบ SKU ${sku} ในชีต (สลับไปโหมดรับเข้าเพื่อแอดสินค้าใหม่ได้)`);
-        }
-      }
-    }
+  if (!confirm("ต้องการล้างรายการทั้งหมดหรือไม่?")) return;
 
-    function hideNewSku() {
-      document.getElementById("newSkuBox").style.display = "none";
-    }
+  cart = [];
+  renderCart();
+  setStatus("ล้างรายการเรียบร้อย");
+  focusScanner();
+}
 
-    async function saveNewSku() {
-      const sku = document.getElementById("newSkuCode").textContent.trim();
-      const name = document.getElementById("newSkuName").value.trim();
-      const price = Number(document.getElementById("newSkuPrice").value) || 0;
-      const qty = Number(document.getElementById("newSkuQty").value) || 1;
-      if (!sku || !name) {
-        setStatus("กรุณาใส่ชื่อสินค้าก่อนบันทึก");
-        return;
-      }
-      setStatus("กำลังบันทึกสินค้าใหม่ลง Google Sheets...");
-      const res = await apiPost({ action: "stockIn", sku, name, price, qty, minStock: 5 });
-      if (res.ok) {
-        products = res.products || products;
-        hideNewSku();
-        renderAll();
-        setStatus(`เพิ่มสินค้า "${name}" จำนวน ${qty} เรียบร้อย`);
-      } else {
-        setStatus("บันทึกไม่สำเร็จ: " + (res.error || ""));
-      }
-    }
+function renderCart() {
+  const box = document.getElementById("cartList");
 
-    function changeQty(idx, delta) {
-      const next = (cart[idx].qty || 0) + delta;
-      if (next <= 0) {
-        askDeleteCartItem(idx);
-        return;
-      }
-      cart[idx].qty = next;
-      renderActiveList();
-      updateSummary();
-    }
+  if (!cart.length) {
+    box.innerHTML =
+      '<div class="empty">ยังไม่มีสินค้า<br>เริ่มสแกนบาร์โค้ดได้เลย</div>';
+  } else {
+    box.innerHTML = cart.map((item,index) => {
+      const amount = mode === "out"
+        ? item.price * item.qty
+        : item.qty;
 
-    function askDeleteCartItem(idx) {
-      const pinCheck = prompt(`ยืนยันการลบรายการ "${cart[idx].name}" — กรอกรหัสยืนยันการลบ:`);
-      if (pinCheck === null) return;
-      if (pinCheck.trim() !== DELETE_PIN) {
-        setStatus("รหัสยืนยันการลบไม่ถูกต้อง ยกเลิกการลบ");
-        return;
-      }
-      cart.splice(idx, 1);
-      renderActiveList();
-      updateSummary();
-      setStatus("ลบรายการออกจากตะกร้าแล้ว");
-    }
-
-    function renderActiveList() {
-      const box = document.getElementById("activeList");
-      if (cart.length === 0) {
-        box.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:8px 0;">
-          ${mode === "sell" ? "ยังไม่มีรายการขายออก — สแกนบาร์โค้ดหรือพิมพ์ SKU ด้านบน" : "ยังไม่มีรายการรับเข้า — สแกนบาร์โค้ดหรือพิมพ์ SKU ด้านบน"}
-        </div>`;
-        return;
-      }
-      box.innerHTML = cart.map((item, i) => `
-        <div class="cart-item">
-          <div>
-            <div class="item-name">${item.name}</div>
-            <div class="item-sub">SKU: ${item.sku} • ราคา ${Number(item.price).toLocaleString()} กีบ</div>
+      return `
+        <div class="product-row">
+          <div class="product-info">
+            <div class="product-name">${escapeHTML(item.name)}</div>
+            <div class="product-detail">
+              SKU: ${escapeHTML(item.sku)}
+              · ${Number(item.price).toLocaleString()} กีบ/ชิ้น
+            </div>
+            ${mode === "out"
+              ? `<div class="product-detail">รวม ${amount.toLocaleString()} กีบ</div>`
+              : `<div class="product-detail">รับเข้า ${item.qty} ชิ้น</div>`
+            }
           </div>
-          <div class="qty-box">
-            <button onclick="changeQty(${i}, -1)">-</button>
-            <span class="qty-num">${item.qty}</span>
-            <button onclick="changeQty(${i}, 1)">+</button>
-            <button class="btn-red" onclick="askDeleteCartItem(${i})">ลบ</button>
+          <div class="qty-controls">
+            <button onclick="changeQty(${index},-1)">−</button>
+            <span class="qty-value">${item.qty}</span>
+            <button onclick="changeQty(${index},1)">+</button>
+            <button class="red" onclick="removeItem(${index})">×</button>
           </div>
         </div>
-      `).join("");
+      `;
+    }).join("");
+  }
+
+  if (mode === "out") {
+    const total = cart.reduce(
+      (sum,item) => sum + item.price * item.qty,0
+    );
+
+    document.getElementById("totalValue").textContent =
+      total.toLocaleString();
+
+  } else {
+    const qty = cart.reduce(
+      (sum,item) => sum + item.qty,0
+    );
+
+    document.getElementById("totalValue").textContent =
+      qty.toLocaleString() + " ชิ้น";
+  }
+
+  document.getElementById("confirmBtn").disabled =
+    cart.length === 0;
+}
+
+/* ==================================================
+   CONFIRM
+   ================================================== */
+
+async function confirmAction() {
+  if (busy || cart.length === 0) return;
+
+  if (mode === "in") {
+    await confirmStockIn();
+  } else {
+    await confirmSale();
+  }
+}
+
+async function confirmStockIn() {
+  const items = cart.filter(item => item.qty > 0);
+
+  if (!items.length) {
+    setStatus("ไม่มีจำนวนสินค้าที่ต้องรับเข้า");
+    return;
+  }
+
+  if (!confirm("ยืนยันรับสินค้าเข้าจำนวน " +
+    items.reduce((s,x)=>s+x.qty,0) + " ชิ้นหรือไม่?")) return;
+
+  busy = true;
+
+  try {
+    for (const item of items) {
+      const result = await apiPost({
+        action:"stockIn",
+        sku:item.sku,
+        qty:item.qty
+      });
+
+      if (!result.ok) throw new Error(result.error);
+
+      products = result.products || products;
     }
 
-    function updateSummary() {
-      if (mode === "sell") {
-        const total = cart.reduce((sum, it) => sum + (Number(it.price) || 0) * (Number(it.qty) || 0), 0);
-        document.getElementById("summaryTotal").textContent = `${total.toLocaleString()} กีบ`;
-      } else {
-        const totalQty = cart.reduce((sum, it) => sum + (Number(it.qty) || 0), 0);
-        document.getElementById("summaryTotal").textContent = `${totalQty.toLocaleString()} ชิ้น`;
+    cart = [];
+    renderCart();
+    renderStock();
+    setStatus("รับสินค้าเข้าคลังเรียบร้อย");
+
+  } catch(error) {
+    await loadProducts();
+    setStatus("รับสินค้าไม่ครบหรือผิดพลาด: " + error.message +
+      " กรุณาตรวจสอบสต็อกก่อนทำรายการซ้ำ");
+
+  } finally {
+    busy = false;
+    focusScanner();
+  }
+}
+
+async function confirmSale() {
+  if (!confirm("ยืนยันการขายสินค้าทั้งหมดหรือไม่?")) return;
+
+  busy = true;
+
+  try {
+    const requestId = createRequestId();
+
+    const result = await apiPost({
+      action:"checkout",
+      requestId:requestId,
+      items:cart.map(item => ({
+        sku:item.sku,
+        qty:item.qty
+      }))
+    });
+
+    if (!result.ok) throw new Error(result.error);
+
+    const total = result.total || 0;
+    const saleId = result.saleId;
+
+    products = result.products || products;
+    cart = [];
+
+    renderCart();
+    renderStock();
+
+    alert(
+      "ขายสินค้าสำเร็จ\n" +
+      "เลขที่บิล: " + saleId + "\n" +
+      "ยอดรวม: " + total.toLocaleString() + " LAK"
+    );
+
+    setStatus("ขายสินค้าเรียบร้อยแล้ว");
+
+  } catch(error) {
+    await loadProducts();
+    setStatus("ขายไม่สำเร็จ: " + error.message);
+
+  } finally {
+    busy = false;
+    focusScanner();
+  }
+}
+
+/* ==================================================
+   STOCK LIST
+   ================================================== */
+
+function renderStock() {
+  const box = document.getElementById("stockList");
+
+  document.getElementById("stockCount").textContent =
+    "สินค้าทั้งหมด " + products.length + " รายการ";
+
+  if (!products.length) {
+    box.innerHTML =
+      '<div class="empty">ยังไม่มีสินค้าในระบบ</div>';
+    return;
+  }
+
+  box.innerHTML = products.map(p => `
+    <div class="stock-row">
+      <div>
+        <b>${escapeHTML(p.name)}</b>
+        <div class="small muted">${escapeHTML(p.sku)}</div>
+      </div>
+      <div style="text-align:right">
+        <b>${Number(p.price).toLocaleString()} LAK</b>
+        <div class="small ${p.lowStock ? 'red' : 'muted'}">
+          คงเหลือ ${p.stock}
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+/* ==================================================
+   CAMERA SCANNER
+   ================================================== */
+
+async function toggleCamera() {
+  if (cameraRunning) {
+    await stopCamera();
+    return;
+  }
+
+  try {
+    if (!window.Html5Qrcode) {
+      throw new Error("โหลดระบบกล้องไม่สำเร็จ");
+    }
+
+    document.getElementById("reader").innerHTML = "";
+
+    if (!scanner) {
+      scanner = new Html5Qrcode("reader");
+    }
+
+    const formats = [
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E
+    ];
+
+    await scanner.start(
+      {facingMode:"environment"},
+      {
+        fps:10,
+        qrbox:{width:260,height:120},
+        formatsToSupport:formats
+      },
+      (decodedText) => {
+        scanSku(decodedText);
+      },
+      () => {}
+    );
+
+    cameraRunning = true;
+    document.getElementById("cameraBtn").textContent =
+      "ปิดกล้องสแกน";
+
+    setStatus("กล้องพร้อมใช้งาน");
+
+  } catch(error) {
+    setStatus("เปิดกล้องไม่ได้ กรุณาอนุญาตการใช้กล้องและเปิดผ่าน HTTPS");
+  }
+}
+
+async function stopCamera() {
+  if (scanner && cameraRunning) {
+    try {
+      await scanner.stop();
+    } catch(error) {}
+  }
+
+  cameraRunning = false;
+
+  const btn = document.getElementById("cameraBtn");
+  if (btn) btn.textContent = "📷 เปิดกล้องสแกน";
+
+  const reader = document.getElementById("reader");
+  if (reader) reader.innerHTML = "";
+}
+
+/* ==================================================
+   HELPERS
+   ================================================== */
+
+function focusScanner() {
+  if (!cameraRunning) {
+    setTimeout(() => {
+      const input = document.getElementById("skuInput");
+      if (input && !busy &&
+          document.activeElement.tagName !== "INPUT") {
+        input.focus();
       }
-    }
+    },100);
+  }
+}
 
-    function renderCatalog() {
-      document.getElementById("skuCount").textContent = `สินค้า: ${products.length} รายการ`;
-      const cat = document.getElementBy
+function createRequestId() {
+  if (window.crypto && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  return "REQ-" + Date.now() + "-" +
+    Math.random().toString(36).slice(2);
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
+  })[char]);
+}
+
+/* ==================================================
+   START
+   ================================================== */
+
+document.getElementById("pin").addEventListener(
+  "keydown",event => {
+    if (event.key === "Enter") login();
+  }
+);
+
+document.getElementById("app").classList.add("hidden");
+
+</script>
+</body>
+</html>
