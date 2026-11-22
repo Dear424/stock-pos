@@ -16,489 +16,143 @@
       --accent-dark: #16a34a;
       --danger: #ef4444;
       --warn: #f59e0b;
-      --info: #38bdf8;
-      --border: #475569;
+      --blue: #3b82f6;
     }
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
       margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
-      height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      min-height: 100vh;
     }
-    /* PIN Lock Screen */
-    #lockScreen {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      z-index: 99;
+    .hidden { display: none !important; }
+    #login-screen {
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 24px;
-      gap: 14px;
+      gap: 16px;
+      background: linear-gradient(180deg, rgba(15,23,42,0.88), rgba(15,23,42,0.96));
     }
-    #lockScreen input {
-      width: 220px;
-      font-size: 24px;
+    .login-box {
+      width: 100%;
+      max-width: 360px;
+      background: rgba(30, 41, 59, 0.95);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 18px;
+      padding: 24px;
       text-align: center;
-      letter-spacing: 8px;
+    }
+    .pin-input {
+      width: 100%;
+      font-size: 28px;
+      letter-spacing: 12px;
+      text-align: center;
       padding: 12px;
       border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--panel);
-      color: var(--text);
+      border: 1px solid #475569;
+      background: #0f172a;
+      color: #fff;
+      margin: 14px 0;
     }
     button {
       border: none;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 14px;
-      font-weight: 700;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-weight: 600;
       cursor: pointer;
-      color: var(--text);
-      background: var(--card);
+      color: #fff;
     }
-    button:active { transform: scale(0.98); }
-    .btn-green { background: var(--accent); color: #052e16; }
-    .btn-red { background: var(--danger); color: #fff; }
-    .btn-blue { background: var(--info); color: #082f49; }
-    .btn-warn { background: var(--warn); color: #451a03; }
+    .btn-green { background: var(--accent); width: 100%; }
+    .btn-green:active { background: var(--accent-dark); }
+    .btn-blue { background: var(--blue); }
+    .btn-red { background: var(--danger); }
+    .btn-gray { background: var(--card); }
+    .msg-err { color: #f87171; font-size: 13px; min-height: 18px; margin-top: 6px; }
 
-    /* Top Mode Tabs */
-    .top-bar {
-      display: grid;
-      grid-template-columns: 1fr 1fr auto;
-      gap: 8px;
-      padding: 8px 10px;
-      background: var(--panel);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .tab-btn { padding: 10px 8px; font-size: 14px; opacity: 0.75; }
-    .tab-btn.active { opacity: 1; outline: 2px solid var(--accent); background: var(--card); }
-
-    /* Split Screen Layout */
-    .split-wrap {
-      flex: 1;
+    #app-screen { max-width: 900px; margin: 0 auto; padding: 16px; padding-bottom: 80px; }
+    .topbar {
       display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-    .scanner-zone {
-      height: 38%;
-      min-height: 170px;
-      background: #000;
-      border-bottom: 2px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      padding: 8px 10px;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-    .cam-controls {
-      display: flex;
-      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: space-between;
       align-items: center;
-    }
-    .cam-controls input {
-      flex: 1;
-      padding: 9px 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
+      gap: 10px;
       background: var(--panel);
-      color: var(--text);
-      font-size: 14px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      margin-bottom: 14px;
     }
-    #reader {
-      flex: 1;
-      min-height: 0;
-      width: 100%;
-      overflow: hidden;
-      border-radius: 8px;
-      background: #090d16;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .list-zone {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-      padding: 10px;
-      gap: 8px;
-      overflow-y: auto;
-    }
-    .status-line {
+    .badge {
       font-size: 12px;
-      color: var(--muted);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(34,197,94,0.18);
+      color: #4ade80;
     }
-    .cart-item {
+    .panel {
       background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .row-flex { display: flex; gap: 8px; flex-wrap: wrap; }
+    input, select {
+      background: #0f172a;
+      color: #fff;
+      border: 1px solid #475569;
+      border-radius: 10px;
       padding: 10px 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-    .item-name { font-weight: 700; font-size: 15px; }
-    .item-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .qty-box { display: flex; align-items: center; gap: 6px; }
-    .qty-num { min-width: 26px; text-align: center; font-weight: 800; font-size: 16px; }
-
-    .new-sku-box {
-      background: var(--panel);
-      border: 1px dashed var(--warn);
-      border-radius: 12px;
-      padding: 10px;
-      display: none;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .new-sku-box input {
-      padding: 9px 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--bg);
-      color: var(--text);
       font-size: 14px;
     }
-
-    .footer-bar {
-      background: var(--panel);
-      border-top: 1px solid var(--border);
-      padding: 10px 12px;
+    input.grow { flex: 1; min-width: 160px; }
+    #reader { width: 100%; max-width: 420px; margin: 10px auto 0; border-radius: 12px; overflow: hidden; }
+    .item-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 10px;
-      flex-shrink: 0;
+      flex-wrap: wrap;
     }
-    .total-txt { font-size: 17px; font-weight: 800; color: var(--accent); }
-    .catalog-card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 8px 10px;
-      font-size: 13px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .low { color: var(--danger); font-weight: 700; }
+    .item-meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .low-stock { color: #fbbf24; font-weight: 700; }
+    .qty-box { display: flex; align-items: center; gap: 8px; }
+    .qty-num { min-width: 34px; text-align: center; font-weight: 700; font-size: 17px; }
   </style>
 </head>
 <body>
 
-  <!-- หน้าใส่รหัส PIN ก่อนเข้าใช้งาน -->
-  <div id="lockScreen">
-    <h2 style="margin:0;">ระบบสต็อก & ขายหน้าร้าน</h2>
-    <div style="color:var(--muted);font-size:13px;">กรอกรหัส PIN 4 หลักเพื่อเข้าใช้งาน</div>
-    <input id="pinInput" type="password" inputmode="numeric" maxlength="6" placeholder="••••" />
-    <button class="btn-green" style="width:220px;padding:12px;" onclick="unlockApp()">เข้าใช้งาน</button>
-    <div id="lockMsg" style="color:var(--danger);font-size:13px;min-height:18px;"></div>
-  </div>
-
-  <!-- แถบสลับโหมดด้านบน -->
-  <div class="top-bar">
-    <button id="tabSell" class="tab-btn active btn-green" onclick="setMode('sell')">ขายออก (ตัดสต็อก)</button>
-    <button id="tabIn" class="tab-btn btn-blue" onclick="setMode('in')">รับเข้า / แอด SKU</button>
-    <button onclick="loadProducts()" title="รีเฟรชสต็อก">รีเฟรช</button>
-  </div>
-
-  <div class="split-wrap">
-    <!-- ครึ่งบน: กล้องสแกนบาร์โค้ดแถบขีด + พิมพ์รหัสสำรอง -->
-    <div class="scanner-zone">
-      <div class="cam-controls">
-        <button id="camToggleBtn" class="btn-warn" onclick="toggleCamera()">เปิดกล้องสแกน</button>
-        <input id="manualSku" type="text" inputmode="numeric" placeholder="พิมพ์/วางเลข SKU แล้วกด Enter" onkeydown="if(event.key==='Enter') handleSku(this.value)" />
-        <button class="btn-blue" onclick="handleSku(document.getElementById('manualSku').value)">ตกลง</button>
-      </div>
-      <div id="reader"><span style="color:var(--muted);font-size:13px;">กด "เปิดกล้องสแกน" เพื่อสแกนบาร์โค้ดแถบขีด</span></div>
-    </div>
-
-    <!-- ครึ่งล่าง: รายการสินค้า / ฟอร์มแอด SKU ใหม่ / รายการสต็อก -->
-    <div class="list-zone">
-      <div class="status-line">
-        <span id="statusText">พร้อมใช้งาน</span>
-        <span id="skuCount">สินค้า: 0 รายการ</span>
-      </div>
-
-      <!-- กล่องแอดสินค้าใหม่เมื่อสแกนเจอ SKU ที่ยังไม่มีในชีต -->
-      <div id="newSkuBox" class="new-sku-box">
-        <div style="font-weight:700;color:var(--warn);">พบบาร์โค้ดใหม่: <span id="newSkuCode"></span></div>
-        <input id="newSkuName" type="text" placeholder="ชื่อสินค้า (เช่น น้ำดื่ม 600ml)" />
-        <div style="display:flex;gap:8px;">
-          <input id="newSkuPrice" type="number" inputmode="numeric" placeholder="ราคา (กีบ)" style="flex:1;" />
-          <input id="newSkuQty" type="number" inputmode="numeric" value="1" placeholder="จำนวน" style="width:90px;" />
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn-green" style="flex:1;" onclick="saveNewSku()">บันทึกลงชีต</button>
-          <button onclick="hideNewSku()">ยกเลิก</button>
-        </div>
-      </div>
-
-      <div id="activeList"></div>
-
-      <div style="margin-top:6px;font-size:13px;font-weight:700;color:var(--muted);">สต็อกในชีตทั้งหมด</div>
-      <div id="catalogList" style="display:flex;flex-direction:column;gap:6px;"></div>
+  <!-- หน้าล็อกอิน PIN -->
+  <div id="login-screen">
+    <div class="login-box">
+      <h2 style="margin:0 0 6px;">ระบบสต็อก &amp; ขายหน้าร้าน</h2>
+      <div style="color:var(--muted);font-size:13px;">กรอกรหัส PIN 4 หลักเพื่อเข้าใช้งาน</div>
+      <input id="pin-input" class="pin-input" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" />
+      <button id="login-btn" type="button" class="btn-green">เข้าใช้งาน</button>
+      <div id="login-msg" class="msg-err"></div>
     </div>
   </div>
 
-  <!-- แถบสรุปยอดและปุ่มยืนยันด้านล่าง -->
-  <div class="footer-bar">
-    <div>
-      <div style="font-size:12px;color:var(--muted);" id="summaryLabel">ยอดรวมขายออก</div>
-      <div class="total-txt" id="summaryTotal">0 กีบ</div>
+  <!-- หน้าหลักระบบสต็อก -->
+  <div id="app-screen" class="hidden">
+    <div class="topbar">
+      <div>
+        <strong>Stock POS (Products / Logs)</strong>
+        <span id="sync-badge" class="badge">พร้อมใช้งาน (Offline Cache)</span>
+      </div>
+      <div class="row-flex">
+        <button id="toggle-scan-btn" type="button" class="btn-blue">สแกนบาร์โค้ด</button>
+        <button id="sync-btn" type="button" class="btn-gray">ซิงก์ชีต</button>
+        <button id="lock-btn" type="button" class="btn-gray">ล็อก</button>
+      </div>
     </div>
-    <button id="confirmBtn" class="btn-green" style="padding:12px 20px;font-size:15px;" onclick="submitAction()">ยืนยันตัดสต็อก</button>
-  </div>
 
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyUOsMB-YMC_jSIRFR4_UAyN6X_9Zp09GYt8N1jaQDV1P_Tc84LIZPSW88tCvu0aG_bgw/exec";
-    const DELETE_PIN = "9999"; // รหัสยืนยันการลบรายการ (แก้ให้ตรงกับฝั่ง Apps Script)
-
-    let PIN = "";
-    let mode = "sell"; // "sell" หรือ "in"
-    let products = [];
-    let cart = []; // [{sku, name, price, qty}]
-    let html5QrCode = null;
-    let camRunning = false;
-    let lastScan = { code: "", time: 0 };
-
-    function setStatus(msg) {
-      document.getElementById("statusText").textContent = msg;
-    }
-
-    async function unlockApp() {
-      const val = document.getElementById("pinInput").value.trim();
-      if (!val) return;
-      PIN = val;
-      setStatus("กำลังตรวจสอบ PIN และโหลดสินค้า...");
-      const res = await apiGet({ action: "getProducts", pin: PIN });
-      if (!res.ok) {
-        document.getElementById("lockMsg").textContent = res.error || "PIN ไม่ถูกต้อง";
-        return;
-      }
-      products = res.products || [];
-      document.getElementById("lockScreen").style.display = "none";
-      renderAll();
-      setStatus("เชื่อมต่อ Google Sheets สำเร็จ");
-    }
-
-    async function loadProducts() {
-      setStatus("กำลังอัปเดตข้อมูลจากชีต...");
-      const res = await apiGet({ action: "getProducts", pin: PIN });
-      if (res.ok) {
-        products = res.products || [];
-        renderAll();
-        setStatus("อัปเดตสต็อกล่าสุดแล้ว");
-      } else {
-        setStatus("โหลดข้อมูลไม่สำเร็จ: " + (res.error || ""));
-      }
-    }
-
-    async function apiGet(params) {
-      const qs = new URLSearchParams(params).toString();
-      const r = await fetch(`${API_URL}?${qs}`);
-      return r.json();
-    }
-
-    async function apiPost(payload) {
-      const r = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ ...payload, pin: PIN })
-      });
-      return r.json();
-    }
-
-    function setMode(nextMode) {
-      mode = nextMode;
-      cart = [];
-      hideNewSku();
-      document.getElementById("tabSell").classList.toggle("active", mode === "sell");
-      document.getElementById("tabIn").classList.toggle("active", mode === "in");
-      document.getElementById("summaryLabel").textContent = mode === "sell" ? "ยอดรวมขายออก" : "จำนวนรับเข้าทั้งหมด";
-      document.getElementById("confirmBtn").textContent = mode === "sell" ? "ยืนยันตัดสต็อก" : "ยืนยันรับเข้า";
-      document.getElementById("confirmBtn").className = mode === "sell" ? "btn-green" : "btn-blue";
-      renderActiveList();
-      updateSummary();
-    }
-
-    async function toggleCamera() {
-      const btn = document.getElementById("camToggleBtn");
-      if (!camRunning) {
-        try {
-          if (!html5QrCode) {
-            html5QrCode = new Html5Qrcode("reader");
-          }
-          const formats = [
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E
-          ];
-          await html5QrCode.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 250, height: 110 }, formatsToSupport: formats },
-            (decodedText) => {
-              const now = Date.now();
-              if (decodedText === lastScan.code && now - lastScan.time < 1400) return;
-              lastScan = { code: decodedText, time: now };
-              handleSku(decodedText);
-            },
-            () => {}
-          );
-          camRunning = true;
-          btn.textContent = "ปิดกล้อง";
-          btn.className = "btn-red";
-          setStatus("กล้องเปิดอยู่ — จ่อบาร์โค้ดแถบขีดได้เลย");
-        } catch (err) {
-          setStatus("เปิดกล้องไม่ได้: ตรวจสอบสิทธิ์กล้องและลิงก์ https");
-        }
-      } else {
-        await stopCamera();
-      }
-    }
-
-    async function stopCamera() {
-      if (html5QrCode && camRunning) {
-        await html5QrCode.stop();
-      }
-      camRunning = false;
-      const btn = document.getElementById("camToggleBtn");
-      btn.textContent = "เปิดกล้องสแกน";
-      btn.className = "btn-warn";
-      document.getElementById("reader").innerHTML = '<span style="color:var(--muted);font-size:13px;">ปิดกล้องแล้ว</span>';
-    }
-
-    function handleSku(rawSku) {
-      const sku = String(rawSku || "").trim();
-      document.getElementById("manualSku").value = "";
-      if (!sku) return;
-
-      const found = products.find(p => String(p.sku).trim() === sku);
-      if (found) {
-        hideNewSku();
-        const existing = cart.find(c => c.sku === found.sku);
-        if (existing) {
-          existing.qty += 1;
-        } else {
-          cart.push({ sku: found.sku, name: found.name, price: Number(found.price) || 0, qty: 1 });
-        }
-        setStatus(`สแกน: ${found.name} (${found.sku})`);
-        renderActiveList();
-        updateSummary();
-      } else {
-        if (mode === "in") {
-          document.getElementById("newSkuCode").textContent = sku;
-          document.getElementById("newSkuName").value = "";
-          document.getElementById("newSkuPrice").value = "";
-          document.getElementById("newSkuQty").value = "1";
-          document.getElementById("newSkuBox").style.display = "flex";
-          setStatus(`ไม่พบ SKU ${sku} — กรอกข้อมูลเพื่อแอดสินค้าใหม่`);
-        } else {
-          setStatus(`ไม่พบ SKU ${sku} ในชีต (สลับไปโหมดรับเข้าเพื่อแอดสินค้าใหม่ได้)`);
-        }
-      }
-    }
-
-    function hideNewSku() {
-      document.getElementById("newSkuBox").style.display = "none";
-    }
-
-    async function saveNewSku() {
-      const sku = document.getElementById("newSkuCode").textContent.trim();
-      const name = document.getElementById("newSkuName").value.trim();
-      const price = Number(document.getElementById("newSkuPrice").value) || 0;
-      const qty = Number(document.getElementById("newSkuQty").value) || 1;
-      if (!sku || !name) {
-        setStatus("กรุณาใส่ชื่อสินค้าก่อนบันทึก");
-        return;
-      }
-      setStatus("กำลังบันทึกสินค้าใหม่ลง Google Sheets...");
-      const res = await apiPost({ action: "stockIn", sku, name, price, qty, minStock: 5 });
-      if (res.ok) {
-        products = res.products || products;
-        hideNewSku();
-        renderAll();
-        setStatus(`เพิ่มสินค้า "${name}" จำนวน ${qty} เรียบร้อย`);
-      } else {
-        setStatus("บันทึกไม่สำเร็จ: " + (res.error || ""));
-      }
-    }
-
-    function changeQty(idx, delta) {
-      const next = (cart[idx].qty || 0) + delta;
-      if (next <= 0) {
-        askDeleteCartItem(idx);
-        return;
-      }
-      cart[idx].qty = next;
-      renderActiveList();
-      updateSummary();
-    }
-
-    function askDeleteCartItem(idx) {
-      const pinCheck = prompt(`ยืนยันการลบรายการ "${cart[idx].name}" — กรอกรหัสยืนยันการลบ:`);
-      if (pinCheck === null) return;
-      if (pinCheck.trim() !== DELETE_PIN) {
-        setStatus("รหัสยืนยันการลบไม่ถูกต้อง ยกเลิกการลบ");
-        return;
-      }
-      cart.splice(idx, 1);
-      renderActiveList();
-      updateSummary();
-      setStatus("ลบรายการออกจากตะกร้าแล้ว");
-    }
-
-    function renderActiveList() {
-      const box = document.getElementById("activeList");
-      if (cart.length === 0) {
-        box.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:8px 0;">
-          ${mode === "sell" ? "ยังไม่มีรายการขายออก — สแกนบาร์โค้ดหรือพิมพ์ SKU ด้านบน" : "ยังไม่มีรายการรับเข้า — สแกนบาร์โค้ดหรือพิมพ์ SKU ด้านบน"}
-        </div>`;
-        return;
-      }
-      box.innerHTML = cart.map((item, i) => `
-        <div class="cart-item">
-          <div>
-            <div class="item-name">${item.name}</div>
-            <div class="item-sub">SKU: ${item.sku} • ราคา ${Number(item.price).toLocaleString()} กีบ</div>
-          </div>
-          <div class="qty-box">
-            <button onclick="changeQty(${i}, -1)">-</button>
-            <span class="qty-num">${item.qty}</span>
-            <button onclick="changeQty(${i}, 1)">+</button>
-            <button class="btn-red" onclick="askDeleteCartItem(${i})">ลบ</button>
-          </div>
-        </div>
-      `).join("");
-    }
-
-    function updateSummary() {
-      if (mode === "sell") {
-        const total = cart.reduce((sum, it) => sum + (Number(it.price) || 0) * (Number(it.qty) || 0), 0);
-        document.getElementById("summaryTotal").textContent = `${total.toLocaleString()} กีบ`;
-      } else {
-        const totalQty = cart.reduce((sum, it) => sum + (Number(it.qty) || 0), 0);
-        document.getElementById("summaryTotal").textContent = `${totalQty.toLocaleString()} ชิ้น`;
-      }
-    }
-
-    function renderCatalog() {
-      document.getElementById("skuCount").textContent = `สินค้า: ${products.length} รายการ`;
-      const cat = document.getElementBy
+    <div class="panel">
+      <div class="row-
