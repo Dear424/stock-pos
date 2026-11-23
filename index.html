@@ -2,128 +2,365 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stock POS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Stock POS - ລະບົບຂາຍໜ້າຮ້ານ</title>
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-  *{box-sizing:border-box}
-  body{font-family:-apple-system,sans-serif;margin:0;padding:12px;max-width:560px;margin:auto;background:#f4f6fa;color:#222}
-  h2{margin:8px 0}
-  input,button,select{width:100%;padding:14px;font-size:16px;margin:5px 0;border-radius:10px;border:1px solid #ccd}
-  button{background:#1a73e8;color:#fff;border:0}
-  button.gray{background:#667}
-  button.red{background:#d33}
-  button.small{width:auto;padding:8px 14px;margin:0}
-  button:disabled{opacity:.5}
-  .tabs{display:flex;gap:6px;margin:8px 0}
-  .tabs button{background:#dde;color:#223;padding:10px 4px;font-size:15px}
-  .tabs button.on{background:#1a73e8;color:#fff}
-  .card{background:#fff;border-radius:12px;padding:12px;margin:8px 0;box-shadow:0 1px 3px #0002}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:12px 12px 86px;max-width:560px;margin:auto;background:#f1f5f9;color:#1e293b}
+  h2,h3{margin:6px 0}
+  input,button,select{width:100%;padding:13px;font-size:16px;margin:5px 0;border-radius:12px;border:1px solid #cbd5e1}
+  input:focus,select:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px #2563eb22}
+  button{background:#2563eb;color:#fff;border:0;font-weight:600;cursor:pointer}
+  button:active{transform:scale(0.98)}
+  button.green{background:#059669}
+  button.amber{background:#d97706}
+  button.gray{background:#64748b}
+  button.red{background:#dc2626}
+  button.outline{background:#fff;color:#1e293b;border:1.5px solid #cbd5e1}
+  button.small{width:auto;padding:8px 14px;margin:0;font-size:14px}
+  button:disabled{opacity:.5;cursor:not-allowed}
+
+  .card{background:#fff;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 2px 6px #0000000d}
   .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:12px;font-weight:600;background:#e2e8f0;color:#334155}
+  .badge.admin{background:#fef3c7;color:#92400e}
+  .badge.staff{background:#dbeafe;color:#1e40af}
+  .badge.low{background:#fee2e2;color:#b91c1c}
+  .badge.hot{background:#dcfce7;color:#15803d}
+
+  /* แถบเมนูด้านบน (โหมดขายเด่นชัด) */
+  .top-nav{display:grid;grid-template-columns:1.4fr 1fr;gap:8px;margin:10px 0}
+  .top-nav button{padding:12px 8px;font-size:15px;background:#e2e8f0;color:#334155}
+  .top-nav button.on-sell{background:#2563eb;color:#fff;box-shadow:0 3px 10px #2563eb44}
+  .top-nav button.on-stock{background:#0f172a;color:#fff}
+
+  /* แถบเมนูด้านล่าง (แยกปุ่มรับเข้าห่างจากขายชัดเจน) */
+  .bottom-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e2e8f0;padding:8px 12px;display:flex;justify-content:center;z-index:30}
+  .bottom-inner{width:100%;max-width:560px;display:flex;gap:8px}
+  .bottom-inner button{margin:0;padding:10px 6px;font-size:14px;background:#f8fafc;color:#475569;border:1px solid #cbd5e1}
+  .bottom-inner button.on-in{background:#d97706;color:#fff;border-color:#d97706}
+  .bottom-inner button.on-hist{background:#334155;color:#fff;border-color:#334155}
+  .bottom-inner button.on-report{background:#7c3aed;color:#fff;border-color:#7c3aed}
+
   .qty{display:flex;align-items:center;gap:8px}
-  .qty button{width:38px;padding:6px;margin:0}
-  .total{font-size:22px;font-weight:bold;text-align:right}
-  .low{color:#c00;font-weight:bold}
-  .muted{color:#778;font-size:13px}
-  #toast{position:fixed;left:12px;right:12px;bottom:16px;background:#223;color:#fff;padding:14px;border-radius:12px;display:none;z-index:99;text-align:center}
-  #toast.bad{background:#c00}
-  #scanBox{position:fixed;inset:0;background:#000d;z-index:50;padding:12px}
-  #scanBox .inner{max-width:520px;margin:auto;background:#fff;border-radius:14px;padding:12px}
-  #reader{width:100%}
-  #loginMsg{color:#c00}
+  .qty button{width:36px;height:36px;padding:0;margin:0;border-radius:10px}
+  .total-box{background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:12px;margin:10px 0;text-align:right}
+  .total-num{font-size:26px;font-weight:800;color:#1d4ed8}
+  .muted{color:#64748b;font-size:13px}
+
+  /* หน้าต่าง Modal ชำระเงิน & สแกน */
+  .modal{position:fixed;inset:0;background:#0f172acc;z-index:50;padding:12px;overflow-y:auto;display:flex;align-items:center;justify-content:center}
+  .modal[hidden]{display:none}
+  .modal-inner{width:100%;max-width:480px;background:#fff;border-radius:18px;padding:16px;box-shadow:0 20px 40px #0004}
+
+  /* ปุ่มแบงก์กีบ */
+  .banknotes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}
+  .banknotes button{background:#ecfdf5;color:#065f46;border:1.5px solid #6ee7b7;padding:11px 4px;font-size:15px;margin:0}
+  .banknotes button.exact{background:#eff6ff;color:#1e40af;border-color:#93c5fd}
+
+  .pay-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .pay-tabs button{margin:0;background:#f1f5f9;color:#475569}
+  .pay-tabs button.active{background:#059669;color:#fff}
+
+  #qrBox{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;background:#f8fafc;border-radius:14px;border:1.5px dashed #94a3b8;margin:10px 0}
+  #qrcode img{margin:auto;border:8px solid #fff;border-radius:10px;box-shadow:0 2px 8px #0001}
+
+  #reader{width:100%;border-radius:12px;overflow:hidden}
+  #toast{position:fixed;left:12px;right:12px;top:16px;background:#0f172a;color:#fff;padding:14px;border-radius:12px;display:none;z-index:99;text-align:center;font-weight:600;box-shadow:0 8px 20px #0003}
+  #toast.bad{background:#dc2626}
+  #toast.ok{background:#059669}
 </style>
 </head>
 <body>
 
+<!-- หน้าเข้าสู่ระบบ -->
 <section id="login">
-  <h2>Stock POS</h2>
-  <input id="pin" type="password" placeholder="รหัสผ่าน" autocomplete="current-password">
-  <button id="loginBtn">เข้าสู่ระบบ</button>
-  <p id="loginMsg"></p>
+  <div class="card" style="margin-top:24px;padding:20px">
+    <h2 style="text-align:center">Stock POS</h2>
+    <p class="muted" style="text-align:center;margin-bottom:16px">เข้าสู่ระบบจัดการสต็อกและขายหน้าร้าน (₭)</p>
+    <label class="muted">รหัสประจำตัว (6 หลัก)</label>
+    <input id="userId" type="text" inputmode="numeric" maxlength="10" placeholder="กรอกรหัสประจำตัว เช่น 583921">
+    <label class="muted">รหัสผ่าน</label>
+    <input id="password" type="password" placeholder="กรอกรหัสผ่าน" autocomplete="current-password">
+    <button id="loginBtn" style="margin-top:12px">เข้าสู่ระบบ</button>
+    <p id="loginMsg" style="color:#dc2626;text-align:center;font-size:14px"></p>
+  </div>
 </section>
 
+<!-- หน้าหลักโปรแกรม -->
 <section id="app" hidden>
-  <div class="row"><h2>Stock POS</h2><button id="logoutBtn" class="small gray">ออก</button></div>
-  <div class="tabs">
-    <button data-tab="sell" class="on">ขาย</button>
-    <button data-tab="in">รับเข้า</button>
-    <button data-tab="stock">สินค้า</button>
-    <button data-tab="hist">ประวัติ</button>
+  <div class="row">
+    <div>
+      <h2 style="margin:0">Stock POS</h2>
+      <span id="userBadge" class="badge"></span>
+    </div>
+    <button id="logoutBtn" class="small gray">ออกจากระบบ</button>
   </div>
 
-  <!-- ขาย -->
+  <!-- แถบเมนูบน: ขาย vs เช็กสินค้า -->
+  <div class="top-nav">
+    <button data-tab="sell" class="on-sell">🛒 หน้าขาย / คิดเงิน</button>
+    <button data-tab="stock">📦 รายการสินค้า</button>
+  </div>
+
+  <!-- 1. แท็บขาย -->
   <div id="tab-sell">
-    <button id="sellScan">📷 สแกนบาร์โค้ด</button>
+    <button id="sellScan" style="padding:15px;font-size:17px">📷 สแกนบาร์โค้ดขายสินค้า</button>
     <div class="row">
-      <input id="sellInput" placeholder="พิมพ์ SKU หรือชื่อสินค้า">
-      <button id="sellAdd" class="small" style="min-width:80px">เพิ่ม</button>
+      <input id="sellInput" placeholder="พิมพ์รหัส SKU หรือชื่อสินค้า">
+      <button id="sellAdd" class="small" style="min-width:82px;height:48px">เพิ่ม</button>
     </div>
     <div id="cart"></div>
-    <div class="total" id="cartTotal"></div>
-    <button id="checkoutBtn">ตัดสต็อก / ขาย</button>
-    <button id="clearBtn" class="gray">ล้างตะกร้า</button>
-  </div>
-
-  <!-- รับเข้า -->
-  <div id="tab-in" hidden>
-    <div class="card">
-      <button id="inScan">📷 สแกนบาร์โค้ด</button>
-      <input id="inSku" placeholder="SKU / บาร์โค้ด">
-      <div id="inInfo" class="muted"></div>
-      <input id="inQty" type="number" inputmode="numeric" min="1" value="1" placeholder="จำนวนที่รับเข้า">
-      <input id="inName" placeholder="ชื่อสินค้า (จำเป็นสำหรับสินค้าใหม่)">
-      <input id="inPrice" type="number" inputmode="decimal" placeholder="ราคาขาย (จำเป็นสำหรับสินค้าใหม่)">
-      <input id="inMin" type="number" inputmode="numeric" placeholder="สต็อกขั้นต่ำ (สินค้าใหม่)">
-      <button id="inSubmit">บันทึกรับเข้า</button>
+    <div id="cartSummary" hidden>
+      <div class="total-box">
+        <div class="muted">ยอดรวมสุทธิ</div>
+        <div class="total-num" id="cartTotal">0 ₭</div>
+      </div>
+      <button id="openPayBtn" class="green" style="padding:16px;font-size:18px">💵 คิดเงิน / ชำระเงิน</button>
+      <button id="clearBtn" class="outline" style="margin-top:8px">ล้างตะกร้า</button>
     </div>
   </div>
 
-  <!-- สินค้า -->
+  <!-- 2. แท็บสินค้า -->
   <div id="tab-stock" hidden>
-    <input id="stockSearch" placeholder="ค้นหา SKU หรือชื่อ">
-    <label><input type="checkbox" id="lowOnly" style="width:auto"> เฉพาะสินค้าใกล้หมด</label>
+    <div class="card">
+      <input id="stockSearch" placeholder="ค้นหา SKU, ชื่อ หรือหมวดหมู่">
+      <div class="row" style="margin-top:6px;flex-wrap:wrap">
+        <label style="font-size:14px;display:flex;align-items:center;gap:6px">
+          <input type="checkbox" id="lowOnly" style="width:auto;margin:0"> ⚠️ เฉพาะสินค้าใกล้หมด
+        </label>
+        <label style="font-size:14px;display:flex;align-items:center;gap:6px">
+          <input type="checkbox" id="bestOnly" style="width:auto;margin:0"> 🔥 เรียงตามสินค้าขายดี
+        </label>
+      </div>
+    </div>
     <div id="stockList"></div>
   </div>
 
-  <!-- ประวัติ -->
+  <!-- 3. แท็บรับเข้า (แยกออกมาด้านล่าง ป้องกันกดสลับมั่วกับขาย) -->
+  <div id="tab-in" hidden>
+    <div class="card" style="border-top:4px solid #d97706">
+      <h3 style="color:#b45309">📥 รับสินค้าเข้าสต็อก</h3>
+      <button id="inScan" class="amber">📷 สแกนบาร์โค้ดรับเข้า</button>
+      <input id="inSku" placeholder="รหัส SKU / บาร์โค้ด">
+      <div id="inInfo" style="margin:6px 0;font-size:14px;font-weight:600"></div>
+
+      <label class="muted">จำนวนที่รับเข้าเพิ่ม</label>
+      <input id="inQty" type="number" inputmode="numeric" min="1" value="1" placeholder="จำนวนที่รับเข้า">
+
+      <!-- ช่องด้านล่างนี้จะแสดงเฉพาะตอนเพิ่มสินค้าใหม่เท่านั้น -->
+      <div id="newProductFields" hidden>
+        <hr style="border:0;border-top:1px solid #e2e8f0;margin:12px 0">
+        <div class="badge admin" style="margin-bottom:6px">ตั้งค่าสินค้าใหม่ (เฉพาะผู้จัดการ)</div>
+        <input id="inName" placeholder="ชื่อสินค้าใหม่ *">
+        <input id="inPrice" type="number" inputmode="numeric" placeholder="ราคาขาย (กีบ) *">
+        <input id="inCategory" placeholder="หมวดหมู่ เช่น เครื่องดื่ม, ขนม, ของใช้">
+        <input id="inMin" type="number" inputmode="numeric" value="5" placeholder="แจ้งเตือนเมื่อสต็อกต่ำกว่า (MinStock)">
+      </div>
+
+      <button id="inSubmit" class="amber" style="margin-top:10px">บันทึกรับเข้าสต็อก</button>
+    </div>
+  </div>
+
+  <!-- 4. แท็บประวัติ -->
   <div id="tab-hist" hidden>
-    <button id="histReload" class="gray">รีเฟรชประวัติ</button>
+    <button id="histReload" class="outline">🔄 รีเฟรชประวัติ</button>
     <div id="histList"></div>
+  </div>
+
+  <!-- 5. แท็บรายงาน & ตั้งค่า (เฉพาะผู้จัดการร้าน) -->
+  <div id="tab-report" hidden>
+    <div class="card">
+      <h3>📊 สรุปยอดขายประจำเดือน</h3>
+      <div class="row">
+        <input id="reportMonth" type="month">
+        <button id="loadReportBtn" class="small" style="height:48px">ดูข้อมูล</button>
+      </div>
+      <div class="row" style="margin-top:10px;text-align:center">
+        <div style="flex:1;background:#f8fafc;padding:10px;border-radius:10px">
+          <div class="muted">ยอดขายรวม</div>
+          <div id="repRev" style="font-size:18px;font-weight:800;color:#059669">0 ₭</div>
+        </div>
+        <div style="flex:1;background:#f8fafc;padding:10px;border-radius:10px">
+          <div class="muted">ขายได้ (ชิ้น)</div>
+          <div id="repQty" style="font-size:18px;font-weight:800;color:#2563eb">0</div>
+        </div>
+      </div>
+
+      <h4 style="margin:14px 0 6px">สัดส่วนยอดขายตามหมวดหมู่</h4>
+      <div style="max-width:280px;margin:auto">
+        <canvas id="catChart"></canvas>
+      </div>
+      <div id="catLegend" style="margin-top:10px"></div>
+
+      <h4 style="margin:14px 0 6px">🏆 สินค้าขายดีประจำเดือน</h4>
+      <div id="topProdList"></div>
+    </div>
+
+    <div class="card">
+      <h3>🏦 ตั้งค่า QR รับเงินธนาคารลาว</h3>
+      <p class="muted">ข้อมูลนี้จะถูกเก็บไว้ในระบบหลังบ้านอย่างปลอดภัย เพื่อสร้าง QR ตามยอดบิลจริง</p>
+      <input id="cfgBank" placeholder="ชื่อธนาคาร เช่น BCEL One / LDB">
+      <input id="cfgAccNo" placeholder="เลขบัญชี / เบอร์พร้อมเพย์ร้าน">
+      <input id="cfgAccName" placeholder="ชื่อบัญชีร้านค้า">
+      <textarea id="cfgEmv" rows="3" style="width:100%;padding:10px;border-radius:10px;border:1px solid #cbd5e1;font-size:13px" placeholder="วางโค้ด LAO QR (EMV String) ของร้านที่นี่ (ถ้ามี)"></textarea>
+      <button id="saveQrBtn" class="green">บันทึกการตั้งค่า QR</button>
+    </div>
+  </div>
+
+  <!-- แถบเมนูด้านล่าง (แยกรับเข้า / ประวัติ / รายงาน) -->
+  <div class="bottom-bar">
+    <div class="bottom-inner">
+      <button data-tab="in">📥 รับเข้าสต็อก</button>
+      <button data-tab="hist">📜 ประวัติ</button>
+      <button data-tab="report" id="navReportBtn" hidden>📊 ยอดขาย/ตั้งค่า</button>
+    </div>
   </div>
 </section>
 
-<div id="scanBox" hidden>
-  <div class="inner">
+<!-- หน้าต่างชำระเงิน (เงินสดกีบ + ทอนเงิน + QR ตามยอดจริง) -->
+<div id="payModal" class="modal" hidden>
+  <div class="modal-inner">
+    <div class="row">
+      <h3 style="margin:0">ชำระเงิน</h3>
+      <button id="closePayBtn" class="small outline">✕ ปิด</button>
+    </div>
+    <div class="total-box" style="margin:10px 0">
+      <div class="muted">ยอดที่ต้องชำระ</div>
+      <div class="total-num" id="payDueText">0 ₭</div>
+    </div>
+
+    <div class="pay-tabs">
+      <button id="modeCashBtn" class="active">💵 เงินสด (กีบ)</button>
+      <button id="modeQrBtn">📱 สแกน QR ธนาคาร</button>
+    </div>
+
+    <!-- โหมดเงินสด -->
+    <div id="cashSection">
+      <label class="muted">รับเงินมา (กีบ) — กดปุ่มธนบัตรหรือพิมพ์เอง</label>
+      <div class="row">
+        <input id="cashReceived" type="number" inputmode="numeric" placeholder="0" style="font-size:20px;font-weight:bold">
+        <button id="clearCashBtn" class="small gray" style="height:48px">ล้าง</button>
+      </div>
+      <div class="banknotes">
+        <button type="button" data-note="5000">+5,000</button>
+        <button type="button" data-note="10000">+10,000</button>
+        <button type="button" data-note="20000">+20,000</button>
+        <button type="button" data-note="50000">+50,000</button>
+        <button type="button" data-note="100000">+100,000</button>
+        <button type="button" id="exactCashBtn" class="exact">รับพอดี</button>
+      </div>
+      <div class="card" style="background:#f8fafc;text-align:center;margin:10px 0">
+        <div class="muted">เงินทอนลูกค้า</div>
+        <div id="changeText" style="font-size:24px;font-weight:800;color:#059669">0 ₭</div>
+      </div>
+    </div>
+
+    <!-- โหมด QR ธนาคารลาว -->
+    <div id="qrSection" hidden>
+      <div id="qrBox">
+        <div id="qrShopInfo" style="font-weight:700;margin-bottom:6px;text-align:center"></div>
+        <div id="qrcode"></div>
+        <div id="qrAmountLabel" style="font-size:18px;font-weight:800;color:#1d4ed8;margin-top:8px"></div>
+        <div class="muted" style="text-align:center;margin-top:4px">ให้ลูกค้าสแกนจ่ายตามยอดนี้ แล้วตรวจสอบยอดเข้าก่อนกดยืนยัน</div>
+      </div>
+    </div>
+
+    <button id="confirmCheckoutBtn" class="green" style="padding:15px;font-size:17px">✅ ยืนยันรับเงิน & ตัดสต็อก</button>
+  </div>
+</div>
+
+<!-- หน้าต่างแก้ไขสินค้าสำหรับผู้จัดการ -->
+<div id="editModal" class="modal" hidden>
+  <div class="modal-inner">
+    <div class="row">
+      <h3>แก้ไขข้อมูลสินค้า (ผู้จัดการ)</h3>
+      <button id="closeEditBtn" class="small outline">✕</button>
+    </div>
+    <input id="editSku" disabled style="background:#f1f5f9">
+    <label class="muted">ชื่อสินค้า</label>
+    <input id="editName">
+    <label class="muted">ราคาขาย (กีบ)</label>
+    <input id="editPrice" type="number" inputmode="numeric">
+    <label class="muted">สต็อกคงเหลือจริง</label>
+    <input id="editStock" type="number" inputmode="numeric">
+    <label class="muted">สต็อกขั้นต่ำแจ้งเตือน</label>
+    <input id="editMin" type="number" inputmode="numeric">
+    <label class="muted">หมวดหมู่สินค้า</label>
+    <input id="editCat">
+    <button id="saveEditBtn" class="green" style="margin-top:10px">บันทึกการแก้ไข</button>
+  </div>
+</div>
+
+<!-- หน้าต่างกล้องสแกน -->
+<div id="scanBox" class="modal" hidden>
+  <div class="modal-inner">
     <div id="reader"></div>
-    <p class="muted" id="scanHint">เล็งบาร์โค้ดให้อยู่ในกรอบ</p>
+    <p class="muted" style="text-align:center" id="scanHint">เล็งบาร์โค้ดให้อยู่ในกรอบ (มีเสียงติ๊ดเมื่อติด)</p>
     <button id="scanClose" class="red">ปิดกล้อง</button>
   </div>
 </div>
+
 <div id="toast"></div>
 
 <script>
+// ใส่ URL Web App ของคุณตรงนี้
 const API_URL = 'https://script.google.com/macros/s/AKfycbxCH4C7RjF1r06OSUIDI1wabqaYI5MI8V2IMFTr7oqyFUNvZguBwP6CCwJc2WZtIzR_bQ/exec';
 
-let session = sessionStorage.getItem('pos_session') || '';
+let session = sessionStorage.getItem('pos_session_v2') || '';
+let currentUser = JSON.parse(sessionStorage.getItem('pos_user_v2') || 'null');
 let products = [];
+let qrConfig = {};
+let salesRankMap = {};
 let cart = [];
 let pendingId = null;
 let busy = false;
+let payMode = 'cash';
+let catChartInstance = null;
 
 const $ = id => document.getElementById(id);
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
-  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const money = n => Number(n || 0).toLocaleString('th-TH', {maximumFractionDigits: 2});
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const kip = n => Math.round(Number(n || 0)).toLocaleString('en-US') + ' ₭';
 const newId = () => 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 
+/* ---------- เสียงติ๊ด 1 ครั้งเมื่อสแกนติด (รองรับ iOS Safari) ---------- */
+let audioCtx = null;
+function unlockAudio() {
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) audioCtx = new AudioContext();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playBeep() {
+  try {
+    unlockAudio();
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1050, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.12);
+  } catch (e) {}
+}
+
 let toastTimer;
-function toast(msg, bad) {
+function toast(msg, type = '') {
   const t = $('toast');
   t.textContent = msg;
-  t.className = bad ? 'bad' : '';
+  t.className = type;
   t.style.display = 'block';
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.style.display = 'none', 3500);
+  toastTimer = setTimeout(() => t.style.display = 'none', 3200);
 }
 
 async function api(action, data = {}) {
@@ -140,10 +377,12 @@ async function api(action, data = {}) {
   return json;
 }
 
-/* ---------- ล็อกอิน ---------- */
+/* ---------- ล็อกอิน / ออกจากระบบ ---------- */
 function showLogin() {
   session = '';
-  sessionStorage.removeItem('pos_session');
+  currentUser = null;
+  sessionStorage.removeItem('pos_session_v2');
+  sessionStorage.removeItem('pos_user_v2');
   $('app').hidden = true;
   $('login').hidden = false;
 }
@@ -152,10 +391,15 @@ $('loginBtn').onclick = async () => {
   $('loginMsg').textContent = '';
   $('loginBtn').disabled = true;
   try {
-    const r = await api('login', { pin: $('pin').value });
+    const r = await api('login', {
+      userId: $('userId').value.trim(),
+      password: $('password').value
+    });
     session = r.session;
-    sessionStorage.setItem('pos_session', session);
-    $('pin').value = '';
+    currentUser = r.user;
+    sessionStorage.setItem('pos_session_v2', session);
+    sessionStorage.setItem('pos_user_v2', JSON.stringify(currentUser));
+    $('password').value = '';
     await startApp();
   } catch (e) {
     $('loginMsg').textContent = e.message;
@@ -163,7 +407,7 @@ $('loginBtn').onclick = async () => {
     $('loginBtn').disabled = false;
   }
 };
-$('pin').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginBtn').click(); });
+$('password').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginBtn').click(); });
 
 $('logoutBtn').onclick = async () => {
   try { await api('logout'); } catch (e) {}
@@ -171,49 +415,85 @@ $('logoutBtn').onclick = async () => {
 };
 
 async function startApp() {
+  const isAdmin = currentUser && currentUser.role === 'admin';
+  $('userBadge').textContent = (isAdmin ? '👑 ' : '👤 ') + currentUser.name + ' (' + currentUser.id + ')';
+  $('userBadge').className = 'badge ' + (isAdmin ? 'admin' : 'staff');
+  $('navReportBtn').hidden = !isAdmin;
+
+  const now = new Date();
+  $('reportMonth').value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+
   await loadProducts();
   $('login').hidden = true;
   $('app').hidden = false;
+  switchTab('sell');
   renderCart();
 }
 
 async function loadProducts() {
   const r = await api('products');
-  products = r.products;
+  products = r.products || [];
+  qrConfig = r.qrConfig || {};
+  $('cfgBank').value = qrConfig.bankName || '';
+  $('cfgAccNo').value = qrConfig.accountNo || '';
+  $('cfgAccName').value = qrConfig.accountName || '';
+  $('cfgEmv').value = qrConfig.emvPayload || '';
   renderStock();
 }
 
-/* ---------- แท็บ ---------- */
-document.querySelectorAll('.tabs button').forEach(b => {
-  b.onclick = () => {
-    document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
-    ['sell', 'in', 'stock', 'hist'].forEach(t => $('tab-' + t).hidden = (t !== b.dataset.tab));
-    if (b.dataset.tab === 'hist') loadHistory();
-    if (b.dataset.tab === 'stock') loadProducts().catch(e => toast(e.message, true));
-  };
+/* ---------- สลับแท็บ ---------- */
+function switchTab(tabName) {
+  ['sell', 'stock', 'in', 'hist', 'report'].forEach(t => {
+    $('tab-' + t).hidden = (t !== tabName);
+  });
+  document.querySelectorAll('[data-tab]').forEach(b => {
+    b.className = '';
+    if (b.dataset.tab === tabName) {
+      if (tabName === 'sell') b.className = 'on-sell';
+      else if (tabName === 'stock') b.className = 'on-stock';
+      else if (tabName === 'in') b.className = 'on-in';
+      else if (tabName === 'hist') b.className = 'on-hist';
+      else if (tabName === 'report') b.className = 'on-report';
+    }
+  });
+  if (tabName === 'hist') loadHistory();
+  if (tabName === 'stock') loadProducts().catch(e => toast(e.message, 'bad'));
+  if (tabName === 'report') loadReport();
+}
+document.querySelectorAll('[data-tab]').forEach(b => {
+  b.onclick = () => switchTab(b.dataset.tab);
 });
 
-/* ---------- สแกนกล้อง ---------- */
+/* ---------- กล้องสแกนบาร์โค้ด (สแกนง่าย + เสียงติ๊ด 1 ครั้ง) ---------- */
 let scanner = null, scanCb = null, lastCode = '', lastTime = 0;
 
 async function openScan(cb) {
+  unlockAudio();
   scanCb = cb;
+  lastCode = '';
   $('scanBox').hidden = false;
   try {
     scanner = new Html5Qrcode('reader');
     await scanner.start(
       { facingMode: 'environment' },
-      { fps: 10, qrbox: { width: 280, height: 160 } },
+      {
+        fps: 15,
+        qrbox: { width: 290, height: 150 },
+        aspectRatio: 1.333,
+        experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+      },
       text => {
         const now = Date.now();
-        if (text === lastCode && now - lastTime < 1500) return;
-        lastCode = text; lastTime = now;
+        if (text === lastCode && now - lastTime < 1600) return;
+        lastCode = text;
+        lastTime = now;
+        playBeep(); // ติ๊ด 1 ครั้งทันทีที่จับบาร์โค้ดได้
         if (scanCb) scanCb(String(text).trim());
       },
       () => {}
     );
   } catch (e) {
-    toast('เปิดกล้องไม่ได้: ' + (e.message || e) + ' (ตรวจว่าอนุญาตกล้องใน Safari แล้ว)', true);
+    toast('เปิดกล้องไม่ได้: กรุณาอนุญาตการใช้กล้อง', 'bad');
     closeScan();
   }
 }
@@ -227,7 +507,7 @@ async function closeScan() {
 }
 $('scanClose').onclick = closeScan;
 
-/* ---------- ขาย ---------- */
+/* ---------- โหมดขาย & ตะกร้า ---------- */
 function findProduct(q) {
   q = String(q || '').trim();
   if (!q) return null;
@@ -239,45 +519,53 @@ function findProduct(q) {
 
 function addToCart(q) {
   const p = findProduct(q);
-  if (!p) { toast('ไม่พบสินค้า: ' + q, true); return false; }
+  if (!p) { toast('ไม่พบสินค้า: ' + q, 'bad'); return false; }
   let line = cart.find(x => x.sku === p.sku);
   if (!line) { line = { sku: p.sku, qty: 0 }; cart.push(line); }
   if (line.qty + 1 > p.stock) {
-    toast('สต็อกไม่พอ: ' + p.name + ' (เหลือ ' + p.stock + ')', true);
+    toast('สต็อกไม่พอ: ' + p.name + ' (เหลือ ' + p.stock + ')', 'bad');
     if (line.qty === 0) cart = cart.filter(x => x !== line);
     renderCart();
     return false;
   }
   line.qty += 1;
   pendingId = null;
-  toast('เพิ่ม: ' + p.name);
+  toast('เพิ่ม: ' + p.name, 'ok');
   renderCart();
   return true;
+}
+
+function getCartTotal() {
+  return cart.reduce((sum, l) => {
+    const p = products.find(x => x.sku === l.sku);
+    return sum + (p ? p.price * l.qty : 0);
+  }, 0);
 }
 
 function renderCart() {
   const box = $('cart');
   if (!cart.length) {
-    box.innerHTML = '<p class="muted">ยังไม่มีสินค้าในตะกร้า</p>';
-    $('cartTotal').textContent = '';
+    box.innerHTML = '<div class="card" style="text-align:center"><p class="muted">ยังไม่มีสินค้าในตะกร้า กดสแกนบาร์โค้ดเพื่อเริ่มขาย</p></div>';
+    $('cartSummary').hidden = true;
     return;
   }
-  let total = 0;
   box.innerHTML = cart.map((l, i) => {
     const p = products.find(x => x.sku === l.sku) || { name: l.sku, price: 0 };
-    total += p.price * l.qty;
     return '<div class="card"><div class="row"><div><b>' + esc(p.name) + '</b>' +
-      '<div class="muted">' + esc(l.sku) + ' • ' + money(p.price) + ' บาท</div></div>' +
-      '<div class="qty"><button data-i="' + i + '" data-d="-1">−</button><b>' + l.qty +
+      '<div class="muted">' + esc(l.sku) + ' • ' + kip(p.price) + '</div></div>' +
+      '<div class="qty"><button data-i="' + i + '" data-d="-1" class="outline">−</button><b>' + l.qty +
       '</b><button data-i="' + i + '" data-d="1">+</button></div></div></div>';
   }).join('');
-  $('cartTotal').textContent = 'รวม ' + money(total) + ' บาท';
+
+  $('cartTotal').textContent = kip(getCartTotal());
+  $('cartSummary').hidden = false;
+
   box.querySelectorAll('button').forEach(b => {
     b.onclick = () => {
       const l = cart[Number(b.dataset.i)];
       const p = products.find(x => x.sku === l.sku);
       l.qty += Number(b.dataset.d);
-      if (p && l.qty > p.stock) { l.qty = p.stock; toast('สต็อกมีแค่ ' + p.stock, true); }
+      if (p && l.qty > p.stock) { l.qty = p.stock; toast('สต็อกมีแค่ ' + p.stock, 'bad'); }
       if (l.qty <= 0) cart = cart.filter(x => x !== l);
       pendingId = null;
       renderCart();
@@ -290,40 +578,171 @@ $('sellAdd').onclick = () => { if (addToCart($('sellInput').value)) $('sellInput
 $('sellInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('sellAdd').click(); });
 $('clearBtn').onclick = () => { cart = []; pendingId = null; renderCart(); };
 
-$('checkoutBtn').onclick = async () => {
+/* ---------- หน้าต่างชำระเงิน (แบงก์กีบ 5,000 - 100,000 + QR ตามยอดจริง) ---------- */
+$('openPayBtn').onclick = () => {
+  if (!cart.length) return;
+  const due = getCartTotal();
+  $('payDueText').textContent = kip(due);
+  $('cashReceived').value = '';
+  updateChange();
+  setPayMode('cash');
+  $('payModal').hidden = false;
+};
+$('closePayBtn').onclick = () => { $('payModal').hidden = true; };
+
+function setPayMode(mode) {
+  payMode = mode;
+  $('modeCashBtn').classList.toggle('active', mode === 'cash');
+  $('modeQrBtn').classList.toggle('active', mode === 'qr');
+  $('cashSection').hidden = (mode !== 'cash');
+  $('qrSection').hidden = (mode !== 'qr');
+  if (mode === 'qr') renderDynamicQr(getCartTotal());
+}
+$('modeCashBtn').onclick = () => setPayMode('cash');
+$('modeQrBtn').onclick = () => setPayMode('qr');
+
+function updateChange() {
+  const due = getCartTotal();
+  const rec = Number($('cashReceived').value || 0);
+  const diff = rec - due;
+  if (rec === 0) {
+    $('changeText').textContent = '0 ₭';
+    $('changeText').style.color = '#64748b';
+  } else if (diff < 0) {
+    $('changeText').textContent = 'ขาดอีก ' + kip(Math.abs(diff));
+    $('changeText').style.color = '#dc2626';
+  } else {
+    $('changeText').textContent = kip(diff);
+    $('changeText').style.color = '#059669';
+  }
+}
+$('cashReceived').addEventListener('input', updateChange);
+$('clearCashBtn').onclick = () => { $('cashReceived').value = ''; updateChange(); };
+$('exactCashBtn').onclick = () => { $('cashReceived').value = getCartTotal(); updateChange(); };
+
+document.querySelectorAll('[data-note]').forEach(btn => {
+  btn.onclick = () => {
+    const addVal = Number(btn.dataset.note);
+    const curVal = Number($('cashReceived').value || 0);
+    $('cashReceived').value = curVal + addVal;
+    updateChange();
+  };
+});
+
+function renderDynamicQr(amount) {
+  const qrEl = $('qrcode');
+  qrEl.innerHTML = '';
+  const shopName = qrConfig.accountName || qrConfig.bankName || 'ร้านค้า (LAO QR)';
+  const accInfo = qrConfig.accountNo ? ' (' + qrConfig.accountNo + ')' : '';
+  $('qrShopInfo').textContent = shopName + accInfo;
+  $('qrAmountLabel').textContent = 'ยอดโอน: ' + kip(amount);
+
+  // สร้าง Payload QR ตามยอดเงินจริง (รองรับทั้ง EMV Payload ของธนาคารลาว หรือข้อมูลบัญชี+ยอดเงิน)
+  let qrPayload = '';
+  if (qrConfig.emvPayload) {
+    qrPayload = buildEmvWithAmount(qrConfig.emvPayload, amount);
+  } else {
+    qrPayload = 'LAOQR|ACC:' + (qrConfig.accountNo || 'SHOP') + '|AMT:' + amount + '|CCY:LAK';
+  }
+
+  new QRCode(qrEl, {
+    text: qrPayload,
+    width: 210,
+    height: 210,
+    correctLevel: QRCode.CorrectLevel.M
+  });
+}
+
+// ฝังยอดเงินจริงลงใน EMV QR Code และคำนวณ CRC16 ใหม่ให้สแกนผ่านแอปธนาคารลาวได้ตรงยอด
+function buildEmvWithAmount(baseEmv, amount) {
+  try {
+    let raw = baseEmv.replace(/6304[0-9A-Fa-f]{4}$/, '');
+    const amtStr = String(Math.round(amount));
+    const tag54 = '54' + String(amtStr.length).padStart(2, '0') + amtStr;
+    if (/54\d{2}\d+/.test(raw)) {
+      raw = raw.replace(/54\d{2}\d+/, tag54);
+    } else {
+      raw += tag54;
+    }
+    raw += '6304';
+    return raw + crc16Ccitt(raw);
+  } catch (e) {
+    return baseEmv;
+  }
+}
+
+function crc16Ccitt(str) {
+  let crc = 0xFFFF;
+  for (let i = 0; i < str.length; i++) {
+    crc ^= str.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) {
+      crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+    }
+  }
+  return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+}
+
+$('confirmCheckoutBtn').onclick = async () => {
   if (!cart.length || busy) return;
+  const due = getCartTotal();
+  const rec = Number($('cashReceived').value || 0);
+
+  if (payMode === 'cash' && rec > 0 && rec < due) {
+    toast('รับเงินสดมายังไม่ครบตามยอดขาย', 'bad');
+    return;
+  }
+
   busy = true;
-  $('checkoutBtn').disabled = true;
+  $('confirmCheckoutBtn').disabled = true;
   try {
     pendingId = pendingId || newId();
+    const note = payMode === 'qr'
+      ? 'ชำระผ่าน QR ธนาคาร'
+      : ('เงินสด รับ ' + kip(rec || due) + ' ทอน ' + kip(Math.max(0, (rec || due) - due)));
+
     const r = await api('checkout', {
       requestId: pendingId,
       items: cart.map(l => ({ sku: l.sku, qty: l.qty })),
-      user: 'POS'
+      note: note
     });
-    toast(r.duplicate ? 'รายการนี้บันทึกแล้ว' : ('ขายสำเร็จ รวม ' + money(r.total) + ' บาท'));
+
+    $('payModal').hidden = true;
+    toast(r.duplicate ? 'รายการนี้บันทึกแล้ว' : ('ขายสำเร็จ ยอด ' + kip(r.total)), 'ok');
     cart = [];
     pendingId = null;
     await loadProducts();
     renderCart();
   } catch (e) {
-    toast(e.message, true);
+    toast(e.message, 'bad');
   } finally {
     busy = false;
-    $('checkoutBtn').disabled = false;
+    $('confirmCheckoutBtn').disabled = false;
   }
 };
 
-/* ---------- รับเข้า ---------- */
+/* ---------- โหมดรับเข้าสต็อก (ฉลาดขึ้น: สินค้าเดิมไม่ต้องพิมพ์ชื่อซ้ำ) ---------- */
 function updateInInfo() {
-  const p = products.find(x => x.sku === $('inSku').value.trim());
-  $('inInfo').textContent = p
-    ? 'พบสินค้า: ' + p.name + ' (สต็อกตอนนี้ ' + p.stock + ', ราคา ' + money(p.price) + ')'
-    : ($('inSku').value.trim() ? 'สินค้าใหม่: กรอกชื่อและราคาด้วย' : '');
+  const sku = $('inSku').value.trim();
+  const p = products.find(x => x.sku === sku);
+  const isAdmin = currentUser && currentUser.role === 'admin';
+
+  if (!sku) {
+    $('inInfo').textContent = '';
+    $('newProductFields').hidden = true;
+    return;
+  }
+
   if (p) {
-    $('inName').value = p.name;
-    $('inPrice').value = p.price;
-    $('inMin').value = p.minStock;
+    $('inInfo').innerHTML = '<span style="color:#059669">✅ พบสินค้าเดิม: ' + esc(p.name) + ' (คงเหลือ ' + p.stock + ' ชิ้น • ' + kip(p.price) + ') — ใส่แค่จำนวนแล้วกดบันทึกได้เลย</span>';
+    $('newProductFields').hidden = true; // ซ่อนช่องชื่อ/ราคา ไม่ต้องกรอกซ้ำ
+  } else {
+    if (isAdmin) {
+      $('inInfo').innerHTML = '<span style="color:#d97706">🆕 สินค้าใหม่: กรุณากรอกข้อมูลด้านล่างครั้งแรก</span>';
+      $('newProductFields').hidden = false;
+    } else {
+      $('inInfo').innerHTML = '<span style="color:#dc2626">⛔ ไม่พบรหัสสินค้านี้ (พนักงานเพิ่มสินค้าใหม่เองไม่ได้ กรุณาแจ้งผู้จัดการ)</span>';
+      $('newProductFields').hidden = true;
+    }
   }
 }
 $('inSku').addEventListener('input', updateInInfo);
@@ -337,67 +756,217 @@ $('inSubmit').onclick = async () => {
   if (busy) return;
   const sku = $('inSku').value.trim();
   const qty = Number($('inQty').value);
-  if (!sku || !Number.isInteger(qty) || qty <= 0) { toast('กรอก SKU และจำนวนให้ถูกต้อง', true); return; }
+  if (!sku || !Number.isInteger(qty) || qty <= 0) {
+    toast('กรุณาสแกนบาร์โค้ดและระบุจำนวนที่ถูกต้อง', 'bad');
+    return;
+  }
   const exists = products.some(x => x.sku === sku);
   if (!exists && (!$('inName').value.trim() || $('inPrice').value === '')) {
-    toast('สินค้าใหม่ต้องกรอกชื่อและราคา', true); return;
+    toast('สินค้าใหม่ต้องกรอกชื่อและราคาขาย', 'bad');
+    return;
   }
+
   busy = true;
   $('inSubmit').disabled = true;
   try {
     const item = { sku, qty };
-    if ($('inName').value.trim()) item.name = $('inName').value.trim();
-    if ($('inPrice').value !== '') item.price = Number($('inPrice').value);
-    if ($('inMin').value !== '') item.minStock = Number($('inMin').value);
-    const r = await api('stockIn', { requestId: newId(), items: [item], user: 'POS' });
-    toast(r.message || 'รับเข้าสำเร็จ');
-    ['inSku', 'inName', 'inPrice', 'inMin'].forEach(id => $(id).value = '');
+    if (!exists) {
+      item.name = $('inName').value.trim();
+      item.price = Number($('inPrice').value);
+      item.category = $('inCategory').value.trim() || 'ทั่วไป';
+      item.minStock = Number($('inMin').value || 5);
+    }
+    const r = await api('stockIn', { requestId: newId(), items: [item] });
+    toast(r.message || 'รับเข้าสต็อกสำเร็จ', 'ok');
+    ['inSku', 'inName', 'inPrice', 'inCategory'].forEach(id => $(id).value = '');
+    $('inMin').value = 5;
     $('inQty').value = 1;
     $('inInfo').textContent = '';
+    $('newProductFields').hidden = true;
     await loadProducts();
   } catch (e) {
-    toast(e.message, true);
+    toast(e.message, 'bad');
   } finally {
     busy = false;
     $('inSubmit').disabled = false;
   }
 };
 
-/* ---------- สินค้า ---------- */
+/* ---------- หน้าสินค้า (ดึงสต็อกจริง + ใกล้หมด + ขายดี + แก้ไขเฉพาะผู้จัดการ) ---------- */
 function renderStock() {
   const q = $('stockSearch').value.trim().toLowerCase();
   const lowOnly = $('lowOnly').checked;
-  const list = products
-    .filter(p => !q || p.sku.toLowerCase().includes(q) || p.name.toLowerCase().includes(q))
+  const bestOnly = $('bestOnly').checked;
+  const isAdmin = currentUser && currentUser.role === 'admin';
+
+  let list = products
+    .filter(p => !q || p.sku.toLowerCase().includes(q) || p.name.toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q))
     .filter(p => !lowOnly || p.stock <= p.minStock);
+
+  if (bestOnly) {
+    list = [...list].sort((a, b) => (salesRankMap[b.sku] || 0) - (salesRankMap[a.sku] || 0));
+  }
+
   $('stockList').innerHTML = list.length ? list.map(p => {
     const low = p.stock <= p.minStock;
-    return '<div class="card"><div class="row"><div><b>' + esc(p.name) + '</b>' +
-      '<div class="muted">' + esc(p.sku) + ' • ' + money(p.price) + ' บาท</div></div>' +
-      '<div class="' + (low ? 'low' : '') + '">' + p.stock + (low ? ' ⚠' : '') + '</div></div></div>';
-  }).join('') : '<p class="muted">ไม่พบสินค้า</p>';
+    const soldCount = salesRankMap[p.sku] || 0;
+    return '<div class="card"><div class="row">' +
+      '<div style="flex:1">' +
+        '<div><b>' + esc(p.name) + '</b> <span class="badge">' + esc(p.category || 'ทั่วไป') + '</span></div>' +
+        '<div class="muted" style="margin-top:3px">' + esc(p.sku) + ' • <b>' + kip(p.price) + '</b></div>' +
+        '<div style="margin-top:5px">' +
+          (low ? '<span class="badge low">⚠️ ใกล้หมด (ขั้นต่ำ ' + p.minStock + ')</span> ' : '') +
+          (soldCount > 0 ? '<span class="badge hot">🔥 ขายแล้ว ' + soldCount + ' ชิ้น</span>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div style="text-align:right">' +
+        '<div style="font-size:20px;font-weight:800;color:' + (low ? '#dc2626' : '#0f172a') + '">' + p.stock + '</div>' +
+        '<div class="muted">คงเหลือ</div>' +
+        (isAdmin ? '<button class="small outline" style="margin-top:6px" onclick="openEditProduct(\'' + esc(p.sku) + '\')">แก้ไข</button>' : '') +
+      '</div>' +
+    '</div></div>';
+  }).join('') : '<div class="card"><p class="muted" style="text-align:center">ไม่พบรายการสินค้า</p></div>';
 }
 $('stockSearch').addEventListener('input', renderStock);
 $('lowOnly').addEventListener('change', renderStock);
+$('bestOnly').addEventListener('change', renderStock);
+
+window.openEditProduct = function(sku) {
+  const p = products.find(x => x.sku === sku);
+  if (!p) return;
+  $('editSku').value = p.sku;
+  $('editName').value = p.name;
+  $('editPrice').value = p.price;
+  $('editStock').value = p.stock;
+  $('editMin').value = p.minStock;
+  $('editCat').value = p.category || 'ทั่วไป';
+  $('editModal').hidden = false;
+};
+$('closeEditBtn').onclick = () => { $('editModal').hidden = true; };
+
+$('saveEditBtn').onclick = async () => {
+  if (busy) return;
+  busy = true;
+  $('saveEditBtn').disabled = true;
+  try {
+    const r = await api('adminAdjust', {
+      sku: $('editSku').value,
+      name: $('editName').value,
+      price: Number($('editPrice').value),
+      stock: Number($('editStock').value),
+      minStock: Number($('editMin').value),
+      category: $('editCat').value
+    });
+    $('editModal').hidden = true;
+    toast(r.message, 'ok');
+    await loadProducts();
+  } catch (e) {
+    toast(e.message, 'bad');
+  } finally {
+    busy = false;
+    $('saveEditBtn').disabled = false;
+  }
+};
 
 /* ---------- ประวัติ ---------- */
 async function loadHistory() {
-  $('histList').innerHTML = '<p class="muted">กำลังโหลด...</p>';
+  $('histList').innerHTML = '<p class="muted" style="text-align:center">กำลังโหลด...</p>';
   try {
-    const r = await api('history', { limit: 50 });
+    const r = await api('history', { limit: 60 });
+    // คำนวณยอดขายสะสมต่อสินค้าเพื่อเอาไปโชว์ป้ายขายดีในหน้าสินค้า
+    const rank = {};
+    r.logs.forEach(l => {
+      if (l.type === 'OUT') rank[l.sku] = (rank[l.sku] || 0) + l.qty;
+    });
+    salesRankMap = rank;
+
     $('histList').innerHTML = r.logs.length ? r.logs.map(l =>
-      '<div class="card"><div class="row"><div><b>' + (l.type === 'IN' ? '➕ รับเข้า' : '➖ ขาย') + '</b> ' +
-      esc(l.name) + '<div class="muted">' + esc(l.timestamp) + ' • ' + esc(l.sku) + '</div></div>' +
-      '<div style="text-align:right">' + l.qty + ' ชิ้น<div class="muted">' + money(l.total) + ' บาท</div></div></div></div>'
-    ).join('') : '<p class="muted">ยังไม่มีประวัติ</p>';
+      '<div class="card"><div class="row">' +
+      '<div><b>' + (l.type === 'IN' ? '➕ รับเข้า' : '➖ ขาย') + '</b> ' + esc(l.name) +
+      '<div class="muted">' + esc(l.timestamp) + ' • โดย: ' + esc(l.user) + '</div>' +
+      (l.note ? '<div class="muted">' + esc(l.note) + '</div>' : '') +
+      '</div>' +
+      '<div style="text-align:right"><b>' + l.qty + ' ชิ้น</b><div class="muted">' + kip(l.total) + '</div></div>' +
+      '</div></div>'
+    ).join('') : '<div class="card"><p class="muted" style="text-align:center">ยังไม่มีประวัติ</p></div>';
   } catch (e) {
     $('histList').innerHTML = '';
-    toast(e.message, true);
+    toast(e.message, 'bad');
   }
 }
 $('histReload').onclick = loadHistory;
 
-if (session) startApp().catch(showLogin);
+/* ---------- รายงานยอดขายรายเดือน & กราฟวงกลม (เฉพาะผู้จัดการ) ---------- */
+async function loadReport() {
+  try {
+    const r = await api('analytics', { month: $('reportMonth').value });
+    const a = r.analytics;
+    $('repRev').textContent = kip(a.totalRevenue);
+    $('repQty').textContent = a.totalItemsSold.toLocaleString('en-US') + ' ชิ้น';
+
+    // วาดกราฟวงกลม (Donut Chart) แบ่งสีตามหมวดหมู่
+    const colors = ['#2563eb', '#059669', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#db2777'];
+    const labels = a.categories.map(c => c.category);
+    const values = a.categories.map(c => c.revenue);
+
+    if (catChartInstance) catChartInstance.destroy();
+    const ctx = $('catChart').getContext('2d');
+    catChartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: labels.length ? labels : ['ยังไม่มีข้อมูล'],
+        datasets: [{
+          data: values.length ? values : [1],
+          backgroundColor: values.length ? colors : ['#e2e8f0'],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    $('catLegend').innerHTML = a.categories.length ? a.categories.map((c, idx) =>
+      '<div class="row" style="padding:5px 0;border-bottom:1px solid #f1f5f9">' +
+      '<span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:' + colors[idx % colors.length] + ';margin-right:6px"></span>' + esc(c.category) + '</span>' +
+      '<b>' + kip(c.revenue) + '</b></div>'
+    ).join('') : '<p class="muted" style="text-align:center">ยังไม่มียอดขายในเดือนนี้</p>';
+
+    $('topProdList').innerHTML = a.topProducts.length ? a.topProducts.map((p, idx) =>
+      '<div class="row" style="padding:6px 0;border-bottom:1px solid #f1f5f9">' +
+      '<div><b>#' + (idx + 1) + ' ' + esc(p.name) + '</b> <span class="badge">' + esc(p.category) + '</span></div>' +
+      '<div style="text-align:right"><b>' + p.qty + ' ชิ้น</b><div class="muted">' + kip(p.revenue) + '</div></div></div>'
+    ).join('') : '<p class="muted" style="text-align:center">ยังไม่มีข้อมูลสินค้าขายดี</p>';
+  } catch (e) {
+    toast(e.message, 'bad');
+  }
+}
+$('loadReportBtn').onclick = loadReport;
+
+$('saveQrBtn').onclick = async () => {
+  if (busy) return;
+  busy = true;
+  $('saveQrBtn').disabled = true;
+  try {
+    const r = await api('saveQrConfig', {
+      bankName: $('cfgBank').value,
+      accountNo: $('cfgAccNo').value,
+      accountName: $('cfgAccName').value,
+      emvPayload: $('cfgEmv').value
+    });
+    qrConfig = r.qrConfig;
+    toast(r.message, 'ok');
+  } catch (e) {
+    toast(e.message, 'bad');
+  } finally {
+    busy = false;
+    $('saveQrBtn').disabled = false;
+  }
+};
+
+if (session && currentUser) {
+  startApp().catch(showLogin);
+}
 </script>
 </body>
 </html>
