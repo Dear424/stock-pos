@@ -1,938 +1,343 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="lo">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Stock POS - ระบบขายหน้าร้าน</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stock POS</title>
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <style>
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:12px 12px 86px;max-width:560px;margin:auto;background:#f1f5f9;color:#1e293b}
-  h2,h3{margin:6px 0}
-  input,button,select,textarea{width:100%;padding:13px;font-size:16px;margin:5px 0;border-radius:12px;border:1px solid #cbd5e1}
-  input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px #2563eb22}
-  button{background:#2563eb;color:#fff;border:0;font-weight:600;cursor:pointer}
-  button:active{transform:scale(0.98)}
-  button.green{background:#059669}
-  button.amber{background:#d97706}
-  button.gray{background:#64748b}
-  button.red{background:#dc2626}
-  button.outline{background:#fff;color:#1e293b;border:1.5px solid #cbd5e1}
-  button.small{width:auto;padding:8px 14px;margin:0;font-size:14px}
-  button:disabled{opacity:.5;cursor:not-allowed}
-
-  .card{background:#fff;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 2px 6px #0000000d}
-  .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
-  .badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:12px;font-weight:600;background:#e2e8f0;color:#334155}
-  .badge.admin{background:#fef3c7;color:#92400e}
-  .badge.staff{background:#dbeafe;color:#1e40af}
-  .badge.low{background:#fee2e2;color:#b91c1c}
-  .badge.hot{background:#dcfce7;color:#15803d}
-
-  .top-nav{display:grid;grid-template-columns:1.4fr 1fr;gap:8px;margin:10px 0}
-  .top-nav button{padding:12px 8px;font-size:15px;background:#e2e8f0;color:#334155}
-  .top-nav button.on-sell{background:#2563eb;color:#fff;box-shadow:0 3px 10px #2563eb44}
-  .top-nav button.on-stock{background:#0f172a;color:#fff}
-
-  .bottom-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e2e8f0;padding:8px 12px;display:flex;justify-content:center;z-index:30}
-  .bottom-inner{width:100%;max-width:560px;display:flex;gap:8px}
-  .bottom-inner button{margin:0;padding:10px 6px;font-size:14px;background:#f8fafc;color:#475569;border:1px solid #cbd5e1}
-  .bottom-inner button.on-in{background:#d97706;color:#fff;border-color:#d97706}
-  .bottom-inner button.on-hist{background:#334155;color:#fff;border-color:#334155}
-  .bottom-inner button.on-report{background:#7c3aed;color:#fff;border-color:#7c3aed}
-
-  .qty{display:flex;align-items:center;gap:8px}
-  .qty button{width:36px;height:36px;padding:0;margin:0;border-radius:10px}
-  .total-box{background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:12px;margin:10px 0;text-align:right}
-  .total-num{font-size:26px;font-weight:800;color:#1d4ed8}
-  .muted{color:#64748b;font-size:13px}
-
-  .modal{position:fixed;inset:0;background:#0f172acc;z-index:50;padding:12px;overflow-y:auto;display:flex;align-items:center;justify-content:center}
-  .modal[hidden]{display:none}
-  .modal-inner{width:100%;max-width:480px;background:#fff;border-radius:18px;padding:16px;box-shadow:0 20px 40px #0004}
-
-  .banknotes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}
-  .banknotes button{background:#ecfdf5;color:#065f46;border:1.5px solid #6ee7b7;padding:11px 4px;font-size:15px;margin:0}
-  .banknotes button.exact{background:#eff6ff;color:#1e40af;border-color:#93c5fd}
-
-  .pay-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-  .pay-tabs button{margin:0;background:#f1f5f9;color:#475569}
-  .pay-tabs button.active{background:#059669;color:#fff}
-
-  #qrBox{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;background:#f8fafc;border-radius:14px;border:1.5px dashed #94a3b8;margin:10px 0}
-  #qrcode img{margin:auto;border:8px solid #fff;border-radius:10px;box-shadow:0 2px 8px #0001}
-
-  #reader{width:100%;border-radius:12px;overflow:hidden}
-  #toast{position:fixed;left:12px;right:12px;top:16px;background:#0f172a;color:#fff;padding:14px;border-radius:12px;display:none;z-index:99;text-align:center;font-weight:600;box-shadow:0 8px 20px #0003}
-  #toast.bad{background:#dc2626}
-  #toast.ok{background:#059669}
+:root{--b:#1d4ed8;--g:#047857;--r:#b91c1c;--t:#0f172a;--m:#64748b}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:auto;max-width:640px;padding:12px 12px 24px;background:#f1f5f9;color:var(--t);font-family:-apple-system,"Noto Sans Lao","Noto Sans Thai",sans-serif}
+button,input,textarea{font:inherit;width:100%;padding:12px;margin:4px 0;border:1px solid #cbd5e1;border-radius:8px;background:#fff}
+button{background:var(--b);color:#fff;border:0;font-weight:600}
+button.s{background:#e2e8f0;color:var(--t)}button.d{background:var(--r)}
+button.sm{width:auto;padding:8px 12px;margin:0}button:disabled{opacity:.5}
+.tabs{display:flex;gap:4px;overflow-x:auto;margin:8px 0}
+.tabs button{width:auto;white-space:nowrap;background:#e2e8f0;color:var(--t);margin:0}
+.tabs button.on{background:var(--b);color:#fff}
+.c{background:#fff;border-radius:10px;padding:12px;margin:8px 0;box-shadow:0 1px 2px #0002}
+.r{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.m{color:var(--m);font-size:13px}.tot{font-size:28px;font-weight:700;text-align:right}
+.low{color:var(--r);font-weight:700}.ok{color:var(--g);font-weight:700}
+.ov{position:fixed;inset:0;background:#0009;z-index:20;display:flex;align-items:center;justify-content:center;padding:12px}
+.box{background:#fff;border-radius:12px;padding:16px;width:100%;max-width:440px;max-height:92vh;overflow:auto}
+.seg{display:flex;gap:6px}.seg button{background:#e2e8f0;color:var(--t)}.seg button.on{background:var(--g);color:#fff}
+.q{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.q button{background:#ecfdf5;color:var(--g);border:1px solid #6ee7b7}
+.bar{height:8px;background:var(--b);border-radius:4px}
+#toast{position:fixed;left:12px;right:12px;bottom:16px;background:#0f172a;color:#fff;padding:14px;border-radius:10px;z-index:50;text-align:center}
+#toast.bad{background:var(--r)}
 </style>
 </head>
 <body>
-
-<section id="login">
-  <div class="card" style="margin-top:24px;padding:20px">
-    <h2 style="text-align:center">Stock POS</h2>
-    <p class="muted" style="text-align:center;margin-bottom:16px">เข้าสู่ระบบจัดการสต็อกและขายหน้าร้าน (₭)</p>
-    <label class="muted">รหัสประจำตัว (6 หลัก)</label>
-    <input id="userId" type="text" inputmode="numeric" maxlength="10" placeholder="กรอกรหัสประจำตัว เช่น 583921">
-    <label class="muted">รหัสผ่าน</label>
-    <input id="password" type="password" placeholder="กรอกรหัสผ่าน" autocomplete="current-password">
-    <button id="loginBtn" style="margin-top:12px">เข้าสู่ระบบ</button>
-    <p id="loginMsg" style="color:#dc2626;text-align:center;font-size:14px"></p>
-  </div>
+<section id="lg">
+  <h2>Stock POS</h2>
+  <input id="ui" inputmode="numeric" placeholder="ລະຫັດປະຈຳຕົວ" autocomplete="username">
+  <input id="pw" type="password" placeholder="ລະຫັດຜ່ານ" autocomplete="current-password">
+  <button id="lb">ເຂົ້າສູ່ລະບົບ</button><p id="lm" class="low"></p>
 </section>
 
-<section id="app" hidden>
-  <div class="row">
-    <div>
-      <h2 style="margin:0">Stock POS</h2>
-      <span id="userBadge" class="badge"></span>
-    </div>
-    <button id="logoutBtn" class="small gray">ออกจากระบบ</button>
+<section id="ap" hidden>
+  <div class="r"><div><b>Stock POS</b><div class="m" id="who"></div></div><button id="lo" class="s sm">ອອກຈາກລະບົບ</button></div>
+  <div class="tabs" id="tb">
+    <button data-t="sell" class="on">ຂາຍ</button><button data-t="in">ຮັບເຂົ້າ</button><button data-t="prod">ສິນຄ້າ</button>
+    <button data-t="bill" data-b="1">ບິນ</button><button data-t="hist">ປະຫວັດ</button>
+    <button data-t="rep" data-a="1">ລາຍງານ</button><button data-t="set" data-a="1">ຕັ້ງຄ່າ</button>
   </div>
 
-  <div class="top-nav">
-    <button data-tab="sell" class="on-sell">🛒 หน้าขาย / คิดเงิน</button>
-    <button data-tab="stock">📦 รายการสินค้า</button>
+  <div id="p-sell">
+    <button id="sc">ສະແກນບາໂຄດ</button>
+    <div class="r"><input id="sq" placeholder="SKU / ຊື່ສິນຄ້າ"><button id="sa" class="sm" style="margin-left:6px">ເພີ່ມ</button></div>
+    <div id="cart"></div><div class="tot" id="ct"></div>
+    <button id="pay">ຊຳລະເງິນ</button><button id="cl" class="s">ລ້າງກະຕ່າ</button>
   </div>
 
-  <div id="tab-sell">
-    <button id="sellScan" style="padding:15px;font-size:17px">📷 สแกนบาร์โค้ดขายสินค้า</button>
-    <div class="row">
-      <input id="sellInput" placeholder="พิมพ์รหัส SKU หรือชื่อสินค้า">
-      <button id="sellAdd" class="small" style="min-width:82px;height:48px">เพิ่ม</button>
-    </div>
-    <div id="cart"></div>
-    <div id="cartSummary" hidden>
-      <div class="total-box">
-        <div class="muted">ยอดรวมสุทธิ</div>
-        <div class="total-num" id="cartTotal">0 ₭</div>
-      </div>
-      <button id="openPayBtn" class="green" style="padding:16px;font-size:18px">💵 คิดเงิน / ชำระเงิน</button>
-      <button id="clearBtn" class="outline" style="margin-top:8px">ล้างตะกร้า</button>
-    </div>
+  <div id="p-in" hidden><div class="c">
+    <button id="is">ສະແກນບາໂຄດ</button>
+    <input id="ik" placeholder="SKU"><div class="m" id="ii"></div>
+    <input id="iq" type="number" inputmode="numeric" value="1" placeholder="ຈຳນວນ">
+    <div id="inw"><input id="iname" placeholder="ຊື່ສິນຄ້າ (ສິນຄ້າໃໝ່)"><input id="iprice" inputmode="numeric" placeholder="ລາຄາ (₭)"><input id="imin" inputmode="numeric" placeholder="ສະຕັອກຂັ້ນຕ່ຳ"><input id="icat" placeholder="ໝວດໝູ່"></div>
+    <button id="ib">ບັນທຶກ</button>
+  </div></div>
+
+  <div id="p-prod" hidden>
+    <input id="ps" placeholder="ຄົ້ນຫາ"><label><input type="checkbox" id="lw" style="width:auto"> ສິນຄ້າໃກ້ໝົດ</label>
+    <div id="pl"></div>
   </div>
 
-  <div id="tab-stock" hidden>
-    <div class="card">
-      <input id="stockSearch" placeholder="ค้นหา SKU, ชื่อ หรือหมวดหมู่">
-      <div class="row" style="margin-top:6px;flex-wrap:wrap">
-        <label style="font-size:14px;display:flex;align-items:center;gap:6px">
-          <input type="checkbox" id="lowOnly" style="width:auto;margin:0"> ⚠️ เฉพาะสินค้าใกล้หมด
-        </label>
-        <label style="font-size:14px;display:flex;align-items:center;gap:6px">
-          <input type="checkbox" id="bestOnly" style="width:auto;margin:0"> 🔥 เรียงตามสินค้าขายดี
-        </label>
-      </div>
-    </div>
-    <div id="stockList"></div>
+  <div id="p-bill" hidden>
+    <input id="bq" placeholder="ຄົ້ນຫາບິນ / ສິນຄ້າ"><button id="bs" class="s">ຄົ້ນຫາ</button><div id="bl"></div>
   </div>
 
-  <div id="tab-in" hidden>
-    <div class="card" style="border-top:4px solid #d97706">
-      <h3 style="color:#b45309">📥 รับสินค้าเข้าสต็อก</h3>
-      <button id="inScan" class="amber">📷 สแกนบาร์โค้ดรับเข้า</button>
-      <input id="inSku" placeholder="รหัส SKU / บาร์โค้ด">
-      <div id="inInfo" style="margin:6px 0;font-size:14px;font-weight:600"></div>
+  <div id="p-hist" hidden><button id="hr" class="s">ໂຫຼດໃໝ່</button><div id="hl"></div></div>
 
-      <label class="muted">จำนวนที่รับเข้าเพิ่ม</label>
-      <input id="inQty" type="number" inputmode="numeric" min="1" value="1" placeholder="จำนวนที่รับเข้า">
+  <div id="p-rep" hidden><input type="month" id="rm"><button id="rg">ເບິ່ງລາຍງານ</button><div id="rb"></div></div>
 
-      <div id="newProductFields" hidden>
-        <hr style="border:0;border-top:1px solid #e2e8f0;margin:12px 0">
-        <div class="badge admin" style="margin-bottom:6px">ตั้งค่าสินค้าใหม่ (เฉพาะผู้จัดการ)</div>
-        <input id="inName" placeholder="ชื่อสินค้าใหม่ *">
-        <input id="inPrice" type="number" inputmode="numeric" placeholder="ราคาขาย (กีบ) *">
-        <input id="inCategory" placeholder="หมวดหมู่ เช่น เครื่องดื่ม, ขนม, ของใช้">
-        <input id="inMin" type="number" inputmode="numeric" value="5" placeholder="แจ้งเตือนเมื่อสต็อกต่ำกว่า (MinStock)">
-      </div>
-
-      <button id="inSubmit" class="amber" style="margin-top:10px">บันทึกรับเข้าสต็อก</button>
-    </div>
-  </div>
-
-  <div id="tab-hist" hidden>
-    <button id="histReload" class="outline">🔄 รีเฟรชประวัติ</button>
-    <div id="histList"></div>
-  </div>
-
-  <div id="tab-report" hidden>
-    <div class="card">
-      <h3>📊 สรุปยอดขายประจำเดือน</h3>
-      <div class="row">
-        <input id="reportMonth" type="month">
-        <button id="loadReportBtn" class="small" style="height:48px">ดูข้อมูล</button>
-      </div>
-      <div class="row" style="margin-top:10px;text-align:center">
-        <div style="flex:1;background:#f8fafc;padding:10px;border-radius:10px">
-          <div class="muted">ยอดขายรวม</div>
-          <div id="repRev" style="font-size:18px;font-weight:800;color:#059669">0 ₭</div>
-        </div>
-        <div style="flex:1;background:#f8fafc;padding:10px;border-radius:10px">
-          <div class="muted">ขายได้ (ชิ้น)</div>
-          <div id="repQty" style="font-size:18px;font-weight:800;color:#2563eb">0</div>
-        </div>
-      </div>
-
-      <h4 style="margin:14px 0 6px">สัดส่วนยอดขายตามหมวดหมู่</h4>
-      <div style="max-width:280px;margin:auto">
-        <canvas id="catChart"></canvas>
-      </div>
-      <div id="catLegend" style="margin-top:10px"></div>
-
-      <h4 style="margin:14px 0 6px">🏆 สินค้าขายดีประจำเดือน</h4>
-      <div id="topProdList"></div>
-    </div>
-
-    <div class="card">
-      <h3>🏦 ตั้งค่า QR รับเงินธนาคารลาว</h3>
-      <p class="muted">ข้อมูลนี้จะถูกเก็บไว้ในระบบหลังบ้านอย่างปลอดภัย เพื่อสร้าง QR ตามยอดบิลจริง</p>
-      <input id="cfgBank" placeholder="ชื่อธนาคาร เช่น BCEL One / LDB">
-      <input id="cfgAccNo" placeholder="เลขบัญชี / เบอร์พร้อมเพย์ร้าน">
-      <input id="cfgAccName" placeholder="ชื่อบัญชีร้านค้า">
-      <textarea id="cfgEmv" rows="3" placeholder="วางโค้ด LAO QR (EMV String) ของร้านที่นี่ (ถ้ามี)"></textarea>
-      <button id="saveQrBtn" class="green">บันทึกการตั้งค่า QR</button>
-    </div>
-  </div>
-
-  <div class="bottom-bar">
-    <div class="bottom-inner">
-      <button data-tab="in">📥 รับเข้าสต็อก</button>
-      <button data-tab="hist">📜 ประวัติ</button>
-      <button data-tab="report" id="navReportBtn" hidden>📊 ยอดขาย/ตั้งค่า</button>
-    </div>
-  </div>
+  <div id="p-set" hidden><div class="c">
+    <b>QR ຮັບເງິນ (LAO QR)</b>
+    <input id="cb" placeholder="ຊື່ທະນາຄານ"><input id="cn" placeholder="ຊື່ບັນຊີ"><input id="ca" placeholder="ເລກບັນຊີ">
+    <textarea id="ce" rows="4" placeholder="ຂໍ້ຄວາມ QR ຂອງຮ້ານ (ຂຶ້ນຕົ້ນດ້ວຍ 000201)"></textarea>
+    <div class="m" id="cst"></div><button id="cs">ບັນທຶກ</button>
+  </div></div>
 </section>
 
-<div id="payModal" class="modal" hidden>
-  <div class="modal-inner">
-    <div class="row">
-      <h3 style="margin:0">ชำระเงิน</h3>
-      <button id="closePayBtn" class="small outline">✕ ปิด</button>
-    </div>
-    <div class="total-box" style="margin:10px 0">
-      <div class="muted">ยอดที่ต้องชำระ</div>
-      <div class="total-num" id="payDueText">0 ₭</div>
-    </div>
-
-    <div class="pay-tabs">
-      <button id="modeCashBtn" class="active">💵 เงินสด (กีบ)</button>
-      <button id="modeQrBtn">📱 สแกน QR ธนาคาร</button>
-    </div>
-
-    <div id="cashSection">
-      <label class="muted">รับเงินมา (กีบ) — กดปุ่มธนบัตรหรือพิมพ์เอง</label>
-      <div class="row">
-        <input id="cashReceived" type="number" inputmode="numeric" placeholder="0" style="font-size:20px;font-weight:bold">
-        <button id="clearCashBtn" class="small gray" style="height:48px">ล้าง</button>
-      </div>
-      <div class="banknotes">
-        <button type="button" data-note="5000">+5,000</button>
-        <button type="button" data-note="10000">+10,000</button>
-        <button type="button" data-note="20000">+20,000</button>
-        <button type="button" data-note="50000">+50,000</button>
-        <button type="button" data-note="100000">+100,000</button>
-        <button type="button" id="exactCashBtn" class="exact">รับพอดี</button>
-      </div>
-      <div class="card" style="background:#f8fafc;text-align:center;margin:10px 0">
-        <div class="muted">เงินทอนลูกค้า</div>
-        <div id="changeText" style="font-size:24px;font-weight:800;color:#059669">0 ₭</div>
-      </div>
-    </div>
-
-    <div id="qrSection" hidden>
-      <div id="qrBox">
-        <div id="qrShopInfo" style="font-weight:700;margin-bottom:6px;text-align:center"></div>
-        <div id="qrcode"></div>
-        <div id="qrAmountLabel" style="font-size:18px;font-weight:800;color:#1d4ed8;margin-top:8px"></div>
-        <div class="muted" style="text-align:center;margin-top:4px">ให้ลูกค้าสแกนจ่ายตามยอดนี้ แล้วตรวจสอบยอดเข้าก่อนกดยืนยัน</div>
-      </div>
-    </div>
-
-    <button id="confirmCheckoutBtn" class="green" style="padding:15px;font-size:17px">✅ ยืนยันรับเงิน & ตัดสต็อก</button>
-  </div>
-</div>
-
-<div id="editModal" class="modal" hidden>
-  <div class="modal-inner">
-    <div class="row">
-      <h3>แก้ไขข้อมูลสินค้า (ผู้จัดการ)</h3>
-      <button id="closeEditBtn" class="small outline">✕</button>
-    </div>
-    <input id="editSku" disabled style="background:#f1f5f9">
-    <label class="muted">ชื่อสินค้า</label>
-    <input id="editName">
-    <label class="muted">ราคาขาย (กีบ)</label>
-    <input id="editPrice" type="number" inputmode="numeric">
-    <label class="muted">สต็อกคงเหลือจริง</label>
-    <input id="editStock" type="number" inputmode="numeric">
-    <label class="muted">สต็อกขั้นต่ำแจ้งเตือน</label>
-    <input id="editMin" type="number" inputmode="numeric">
-    <label class="muted">หมวดหมู่สินค้า</label>
-    <input id="editCat">
-    <button id="saveEditBtn" class="green" style="margin-top:10px">บันทึกการแก้ไข</button>
-  </div>
-</div>
-
-<div id="scanBox" class="modal" hidden>
-  <div class="modal-inner">
-    <div id="reader"></div>
-    <p class="muted" style="text-align:center" id="scanHint">เล็งบาร์โค้ดให้อยู่ในกรอบ (มีเสียงติ๊ดเมื่อติด)</p>
-    <button id="scanClose" class="red">ปิดกล้อง</button>
-  </div>
-</div>
-
-<div id="toast"></div>
+<div class="ov" id="m" hidden><div class="box">
+  <div class="r"><b id="mt"></b><button class="s sm" id="mx">ປິດ</button></div>
+  <div id="mb"></div><button id="mok"></button>
+</div></div>
+<div class="ov" id="sv" hidden><div class="box"><div id="reader"></div><button id="sx" class="d">ປິດກ້ອງ</button></div></div>
+<div id="toast" hidden></div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbxZ3dBXgrrTmzl7Iyle_TfrKMnMvwKQFC-HKtdt9dEr2M5j0LsSHl_DCbId03e1M8v25w/exec';
+const API='https://script.google.com/macros/s/AKfycbykD5lzUyATKaIApFWVBTa_EMaDfaxXLNRWnS1fYKTPZQWf1bzQjiZf9PjCJ6r3E16A9A/exec';
+const STAFF_RETURN=false; // ตั้ง true ถ้าอนุญาตให้พนักงานคืนสินค้า (ต้องแก้ STAFF_CAN_RETURN ใน Sheet ด้วย)
+const T={IN:'ຮັບເຂົ້າ',OUT:'ຂາຍ',RETURN:'ຮັບຄືນ',ADJ:'ປັບສະຕັອກ'},MT={cash:'ເງິນສົດ',qr:'QR'},ST={partial:'ຮັບຄືນບາງສ່ວນ',voided:'ຍົກເລີກແລ້ວ'};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>Math.round(Number(n)||0).toLocaleString('en-US')+' ₭';
+const dig=s=>Number(String(s).replace(/\D/g,''))||0;
+const uid=()=>'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+let S={session:sessionStorage.getItem('s')||'',user:JSON.parse(sessionStorage.getItem('u')||'null'),products:[],qr:{},cart:[],rid:null,bills:[]};
+const isA=()=>S.user&&S.user.role==='admin';
 
-let session = sessionStorage.getItem('pos_session_v2') || '';
-let currentUser = JSON.parse(sessionStorage.getItem('pos_user_v2') || 'null');
-let products = [];
-let qrConfig = {};
-let salesRankMap = {};
-let cart = [];
-let pendingId = null;
-let busy = false;
-let payMode = 'cash';
-let catChartInstance = null;
-
-const $ = id => document.getElementById(id);
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const kip = n => Math.round(Number(n || 0)).toLocaleString('en-US') + ' ₭';
-const newId = () => 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
-
-let audioCtx = null;
-function unlockAudio() {
-  if (!audioCtx) {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (AudioContext) audioCtx = new AudioContext();
-  }
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+let tt;function toast(x,bad){const t=$('toast');t.textContent=x;t.className=bad?'bad':'';t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3500)}
+async function api(a,d={}){
+  const r=await fetch(API,{method:'POST',body:new URLSearchParams({action:a,data:JSON.stringify({...d,session:S.session})})});
+  const j=await r.json();
+  if(!j.ok){if(/เข้าสู่ระบบใหม่/.test(j.error||''))out();throw new Error(j.error||'Error')}
+  return j;
 }
-
-function playBeep() {
-  try {
-    unlockAudio();
-    if (!audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(1050, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.12);
-  } catch (e) {}
+function modal(title,html,ok,fn){
+  $('mt').textContent=title;$('mb').innerHTML=html;
+  const b=$('mok');b.hidden=!ok;b.textContent=ok||'';
+  b.onclick=async()=>{b.disabled=true;try{await fn()}catch(e){toast(e.message,1)}b.disabled=false};
+  $('m').hidden=false;
 }
+const closeM=()=>$('m').hidden=true;$('mx').onclick=closeM;
 
-let toastTimer;
-function toast(msg, type = '') {
-  const t = $('toast');
-  t.textContent = msg;
-  t.className = type;
-  t.style.display = 'block';
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.style.display = 'none', 3200);
-}
-
-async function api(action, data = {}) {
-  const body = new URLSearchParams({
-    action,
-    data: JSON.stringify({ ...data, session })
-  });
-  const res = await fetch(API_URL, { method: 'POST', body });
-  const json = await res.json();
-  if (!json.ok) {
-    if (/เข้าสู่ระบบใหม่/.test(json.error || '')) showLogin();
-    throw new Error(json.error || 'เกิดข้อผิดพลาด');
-  }
-  return json;
-}
-
-function showLogin() {
-  session = '';
-  currentUser = null;
-  sessionStorage.removeItem('pos_session_v2');
-  sessionStorage.removeItem('pos_user_v2');
-  $('app').hidden = true;
-  $('login').hidden = false;
-}
-
-$('loginBtn').onclick = async () => {
-  $('loginMsg').textContent = '';
-  $('loginBtn').disabled = true;
-  try {
-    const r = await api('login', {
-      userId: $('userId').value.trim(),
-      password: $('password').value
-    });
-    session = r.session;
-    currentUser = r.user;
-    sessionStorage.setItem('pos_session_v2', session);
-    sessionStorage.setItem('pos_user_v2', JSON.stringify(currentUser));
-    $('password').value = '';
-    await startApp();
-  } catch (e) {
-    $('loginMsg').textContent = e.message;
-  } finally {
-    $('loginBtn').disabled = false;
-  }
+/* ล็อกอิน */
+function out(){S.session='';S.user=null;sessionStorage.clear();$('ap').hidden=true;$('lg').hidden=false}
+$('lb').onclick=async()=>{
+  $('lm').textContent='';$('lb').disabled=true;
+  try{
+    const r=await api('login',{userId:$('ui').value,password:$('pw').value});
+    S.session=r.session;S.user=r.user;sessionStorage.setItem('s',S.session);sessionStorage.setItem('u',JSON.stringify(S.user));
+    $('pw').value='';await start();
+  }catch(e){$('lm').textContent=e.message}
+  $('lb').disabled=false;
 };
-$('password').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginBtn').click(); });
+$('pw').onkeydown=e=>{if(e.key==='Enter')$('lb').click()};
+$('lo').onclick=async()=>{try{await api('logout')}catch(e){}out()};
+async function start(){
+  await load();
+  $('who').textContent=S.user.name+' · '+(isA()?'ຜູ້ຈັດການ':'ພະນັກງານ');
+  document.querySelectorAll('#tb [data-a]').forEach(b=>b.hidden=!isA());
+  document.querySelectorAll('#tb [data-b]').forEach(b=>b.hidden=!(isA()||STAFF_RETURN));
+  $('inw').hidden=!isA();$('rm').value=new Date().toISOString().slice(0,7);
+  $('lg').hidden=true;$('ap').hidden=false;tab('sell');renderCart();
+}
+async function load(){const r=await api('products');S.products=r.products;S.qr=r.qrConfig||{};renderProd();fillSet()}
 
-$('logoutBtn').onclick = async () => {
-  try { await api('logout'); } catch (e) {}
-  showLogin();
+/* แท็บ */
+const TABS=['sell','in','prod','bill','hist','rep','set'];
+function tab(t){
+  TABS.forEach(x=>$('p-'+x).hidden=x!==t);
+  document.querySelectorAll('#tb button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  if(t==='hist')loadHist();if(t==='bill')loadBills();if(t==='prod')load().catch(e=>toast(e.message,1));
+}
+$('tb').onclick=e=>{if(e.target.dataset.t)tab(e.target.dataset.t)};
+
+/* สแกน */
+let sn=null,last='',lt=0;
+async function scan(cb){
+  $('sv').hidden=false;
+  try{
+    sn=new Html5Qrcode('reader');
+    await sn.start({facingMode:'environment'},{fps:10,qrbox:{width:280,height:160}},x=>{
+      const n=Date.now();if(x===last&&n-lt<1500)return;last=x;lt=n;cb(String(x).trim());
+    },()=>{});
+  }catch(e){toast('ເປີດກ້ອງບໍ່ໄດ້: '+(e.message||e),1);closeScan()}
+}
+async function closeScan(){$('sv').hidden=true;if(sn){try{await sn.stop();sn.clear()}catch(e){}sn=null}}
+$('sx').onclick=closeScan;
+
+/* ขาย */
+function find(q){
+  q=q.trim();if(!q)return null;
+  const p=S.products.find(x=>x.sku===q);if(p)return p;
+  const l=S.products.filter(x=>x.name.toLowerCase().includes(q.toLowerCase()));
+  return l.length===1?l[0]:null;
+}
+function add(q){
+  const p=find(q);if(!p){toast('ບໍ່ພົບສິນຄ້າ: '+q,1);return false}
+  let l=S.cart.find(x=>x.sku===p.sku);
+  if(!l){l={sku:p.sku,qty:0};S.cart.push(l)}
+  if(l.qty+1>p.stock){if(!l.qty)S.cart.pop();renderCart();toast('ສະຕັອກບໍ່ພໍ: '+p.name,1);return false}
+  l.qty++;S.rid=null;renderCart();toast(p.name);return true;
+}
+const cartTotal=()=>S.cart.reduce((s,l)=>{const p=S.products.find(x=>x.sku===l.sku);return s+(p?p.price*l.qty:0)},0);
+function renderCart(){
+  $('cart').innerHTML=S.cart.length?S.cart.map((l,i)=>{
+    const p=S.products.find(x=>x.sku===l.sku)||{name:l.sku,price:0};
+    return `<div class="c r"><div><b>${esc(p.name)}</b><div class="m">${esc(l.sku)} · ${fmt(p.price)}</div></div>
+    <div class="r"><button class="sm s" data-i="${i}" data-d="-1">−</button><b>${l.qty}</b><button class="sm" data-i="${i}" data-d="1">+</button></div></div>`;
+  }).join(''):'<p class="m">ຍັງບໍ່ມີສິນຄ້າໃນກະຕ່າ</p>';
+  $('ct').textContent=S.cart.length?'ລວມ '+fmt(cartTotal()):'';
+}
+$('cart').onclick=e=>{
+  const i=e.target.dataset.i;if(i==null)return;
+  const l=S.cart[i],p=S.products.find(x=>x.sku===l.sku);
+  l.qty+=Number(e.target.dataset.d);
+  if(p&&l.qty>p.stock){l.qty=p.stock;toast('ສະຕັອກມີ '+p.stock,1)}
+  if(l.qty<=0)S.cart.splice(i,1);
+  S.rid=null;renderCart();
 };
+$('sc').onclick=()=>scan(add);
+$('sa').onclick=()=>{if(add($('sq').value))$('sq').value=''};
+$('sq').onkeydown=e=>{if(e.key==='Enter')$('sa').click()};
+$('cl').onclick=()=>{S.cart=[];S.rid=null;renderCart()};
 
-async function startApp() {
-  const isAdmin = currentUser && currentUser.role === 'admin';
-  $('userBadge').textContent = (isAdmin ? '👑 ' : '👤 ') + currentUser.name + ' (' + currentUser.id + ')';
-  $('userBadge').className = 'badge ' + (isAdmin ? 'admin' : 'staff');
-  $('navReportBtn').hidden = !isAdmin;
-
-  const now = new Date();
-  $('reportMonth').value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-
-  await loadProducts();
-  $('login').hidden = true;
-  $('app').hidden = false;
-  switchTab('sell');
-  renderCart();
-}
-
-async function loadProducts() {
-  const r = await api('products');
-  products = r.products || [];
-  qrConfig = r.qrConfig || {};
-  $('cfgBank').value = qrConfig.bankName || '';
-  $('cfgAccNo').value = qrConfig.accountNo || '';
-  $('cfgAccName').value = qrConfig.accountName || '';
-  $('cfgEmv').value = qrConfig.emvPayload || '';
-  renderStock();
-}
-
-function switchTab(tabName) {
-  ['sell', 'stock', 'in', 'hist', 'report'].forEach(t => {
-    $('tab-' + t).hidden = (t !== tabName);
+/* ชำระเงิน */
+$('pay').onclick=()=>{
+  if(!S.cart.length)return;
+  const total=cartTotal();let mode='cash',rec=0,payload='';
+  modal('ຊຳລະເງິນ',`<div class="tot">${fmt(total)}</div>
+    <div class="seg"><button id="mc" class="on">ເງິນສົດ</button><button id="mq">QR</button></div><div id="pbd"></div>`,'ຢືນຢັນຮັບເງິນ',async()=>{
+    if(mode==='cash'&&rec<total)throw new Error('ເງິນທີ່ຮັບບໍ່ພໍ');
+    if(mode==='qr'&&!payload)throw new Error('ຍັງບໍ່ມີ QR');
+    S.rid=S.rid||uid();
+    const r=await api('checkout',{requestId:S.rid,items:S.cart.map(l=>({sku:l.sku,qty:l.qty})),paymentMethod:mode,received:mode==='cash'?rec:undefined});
+    S.rid=null;S.cart=[];await load();renderCart();
+    modal('ສຳເລັດ',`<div class="m">ລວມ</div><div class="tot">${fmt(r.total)}</div>
+      ${r.method==='cash'?`<div class="m">ຮັບມາ ${fmt(r.received)}</div><div class="m">ເງິນທອນ</div><div class="tot ok">${fmt(r.change)}</div>`:'<div class="m">ຊຳລະດ້ວຍ QR</div>'}`,'ປິດ',closeM);
   });
-  document.querySelectorAll('[data-tab]').forEach(b => {
-    b.className = '';
-    if (b.dataset.tab === tabName) {
-      if (tabName === 'sell') b.className = 'on-sell';
-      else if (tabName === 'stock') b.className = 'on-stock';
-      else if (tabName === 'in') b.className = 'on-in';
-      else if (tabName === 'hist') b.className = 'on-hist';
-      else if (tabName === 'report') b.className = 'on-report';
+  const draw=async()=>{
+    $('mc').classList.toggle('on',mode==='cash');$('mq').classList.toggle('on',mode==='qr');
+    const b=$('pbd');
+    if(mode==='cash'){
+      b.innerHTML=`<input id="rc" inputmode="numeric" placeholder="ຮັບເງິນມາ (₭)" value="${rec||''}"><div class="q">
+        ${[5000,10000,20000,50000,100000].map(v=>`<button data-v="${v}">+${v.toLocaleString('en-US')}</button>`).join('')}<button data-v="x">ພໍດີ</button></div>
+        <div class="m">ເງິນທອນ</div><div class="tot ok" id="chg"></div>`;
+      const up=()=>{$('chg').textContent=fmt(Math.max(0,rec-total))};up();
+      $('rc').oninput=e=>{rec=dig(e.target.value);up()};
+      b.querySelectorAll('.q button').forEach(x=>x.onclick=()=>{rec=x.dataset.v==='x'?total:rec+Number(x.dataset.v);$('rc').value=rec;up()});
+    }else{
+      b.innerHTML='<p class="m">ກຳລັງສ້າງ QR...</p>';
+      try{
+        payload=(await api('qrPayload',{amount:total})).payload;
+        const q=qrcode(0,'M');q.addData(payload);q.make();
+        b.innerHTML=`<div style="text-align:center">${q.createSvgTag({cellSize:5,margin:4})}<div class="tot" style="text-align:center">${fmt(total)}</div>
+          <p class="m">ໃຫ້ລູກຄ້າສະແກນ ແລ້ວກວດຍອດເຂົ້າໃນແອັບທະນາຄານກ່ອນກົດຢືນຢັນ</p></div>`;
+      }catch(e){b.innerHTML=`<p class="low">${esc(e.message)}</p>`}
     }
-  });
-  if (tabName === 'hist') loadHistory();
-  if (tabName === 'stock') loadProducts().catch(e => toast(e.message, 'bad'));
-  if (tabName === 'report') loadReport();
-}
-document.querySelectorAll('[data-tab]').forEach(b => {
-  b.onclick = () => switchTab(b.dataset.tab);
-});
-
-let scanner = null, scanCb = null, lastCode = '', lastTime = 0;
-
-async function openScan(cb) {
-  unlockAudio();
-  scanCb = cb;
-  lastCode = '';
-  $('scanBox').hidden = false;
-  try {
-    scanner = new Html5Qrcode('reader');
-    await scanner.start(
-      { facingMode: 'environment' },
-      {
-        fps: 15,
-        qrbox: { width: 290, height: 150 },
-        aspectRatio: 1.333,
-        experimentalFeatures: { useBarCodeDetectorIfSupported: true }
-      },
-      text => {
-        const now = Date.now();
-        if (text === lastCode && now - lastTime < 1600) return;
-        lastCode = text;
-        lastTime = now;
-        playBeep();
-        if (scanCb) scanCb(String(text).trim());
-      },
-      () => {}
-    );
-  } catch (e) {
-    toast('เปิดกล้องไม่ได้: กรุณาอนุญาตการใช้กล้อง', 'bad');
-    closeScan();
-  }
-}
-
-async function closeScan() {
-  $('scanBox').hidden = true;
-  if (scanner) {
-    try { await scanner.stop(); scanner.clear(); } catch (e) {}
-    scanner = null;
-  }
-}
-$('scanClose').onclick = closeScan;
-
-function findProduct(q) {
-  q = String(q || '').trim();
-  if (!q) return null;
-  let p = products.find(x => x.sku === q);
-  if (p) return p;
-  const matches = products.filter(x => x.name.toLowerCase().includes(q.toLowerCase()));
-  return matches.length === 1 ? matches[0] : null;
-}
-
-function addToCart(q) {
-  const p = findProduct(q);
-  if (!p) { toast('ไม่พบสินค้า: ' + q, 'bad'); return false; }
-  let line = cart.find(x => x.sku === p.sku);
-  if (!line) { line = { sku: p.sku, qty: 0 }; cart.push(line); }
-  if (line.qty + 1 > p.stock) {
-    toast('สต็อกไม่พอ: ' + p.name + ' (เหลือ ' + p.stock + ')', 'bad');
-    if (line.qty === 0) cart = cart.filter(x => x !== line);
-    renderCart();
-    return false;
-  }
-  line.qty += 1;
-  pendingId = null;
-  toast('เพิ่ม: ' + p.name, 'ok');
-  renderCart();
-  return true;
-}
-
-function getCartTotal() {
-  return cart.reduce((sum, l) => {
-    const p = products.find(x => x.sku === l.sku);
-    return sum + (p ? p.price * l.qty : 0);
-  }, 0);
-}
-
-function renderCart() {
-  const box = $('cart');
-  if (!cart.length) {
-    box.innerHTML = '<div class="card" style="text-align:center"><p class="muted">ยังไม่มีสินค้าในตะกร้า กดสแกนบาร์โค้ดเพื่อเริ่มขาย</p></div>';
-    $('cartSummary').hidden = true;
-    return;
-  }
-  box.innerHTML = cart.map((l, i) => {
-    const p = products.find(x => x.sku === l.sku) || { name: l.sku, price: 0 };
-    return '<div class="card"><div class="row"><div><b>' + esc(p.name) + '</b>' +
-      '<div class="muted">' + esc(l.sku) + ' • ' + kip(p.price) + '</div></div>' +
-      '<div class="qty"><button data-i="' + i + '" data-d="-1" class="outline">−</button><b>' + l.qty +
-      '</b><button data-i="' + i + '" data-d="1">+</button></div></div></div>';
-  }).join('');
-
-  $('cartTotal').textContent = kip(getCartTotal());
-  $('cartSummary').hidden = false;
-
-  box.querySelectorAll('button').forEach(b => {
-    b.onclick = () => {
-      const l = cart[Number(b.dataset.i)];
-      const p = products.find(x => x.sku === l.sku);
-      l.qty += Number(b.dataset.d);
-      if (p && l.qty > p.stock) { l.qty = p.stock; toast('สต็อกมีแค่ ' + p.stock, 'bad'); }
-      if (l.qty <= 0) cart = cart.filter(x => x !== l);
-      pendingId = null;
-      renderCart();
-    };
-  });
-}
-
-$('sellScan').onclick = () => openScan(code => addToCart(code));
-$('sellAdd').onclick = () => { if (addToCart($('sellInput').value)) $('sellInput').value = ''; };
-$('sellInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('sellAdd').click(); });
-$('clearBtn').onclick = () => { cart = []; pendingId = null; renderCart(); };
-
-$('openPayBtn').onclick = () => {
-  if (!cart.length) return;
-  const due = getCartTotal();
-  $('payDueText').textContent = kip(due);
-  $('cashReceived').value = '';
-  updateChange();
-  setPayMode('cash');
-  $('payModal').hidden = false;
-};
-$('closePayBtn').onclick = () => { $('payModal').hidden = true; };
-
-function setPayMode(mode) {
-  payMode = mode;
-  $('modeCashBtn').classList.toggle('active', mode === 'cash');
-  $('modeQrBtn').classList.toggle('active', mode === 'qr');
-  $('cashSection').hidden = (mode !== 'cash');
-  $('qrSection').hidden = (mode !== 'qr');
-  if (mode === 'qr') renderDynamicQr(getCartTotal());
-}
-$('modeCashBtn').onclick = () => setPayMode('cash');
-$('modeQrBtn').onclick = () => setPayMode('qr');
-
-function updateChange() {
-  const due = getCartTotal();
-  const rec = Number($('cashReceived').value || 0);
-  const diff = rec - due;
-  if (rec === 0) {
-    $('changeText').textContent = '0 ₭';
-    $('changeText').style.color = '#64748b';
-  } else if (diff < 0) {
-    $('changeText').textContent = 'ขาดอีก ' + kip(Math.abs(diff));
-    $('changeText').style.color = '#dc2626';
-  } else {
-    $('changeText').textContent = kip(diff);
-    $('changeText').style.color = '#059669';
-  }
-}
-$('cashReceived').addEventListener('input', updateChange);
-$('clearCashBtn').onclick = () => { $('cashReceived').value = ''; updateChange(); };
-$('exactCashBtn').onclick = () => { $('cashReceived').value = getCartTotal(); updateChange(); };
-
-document.querySelectorAll('[data-note]').forEach(btn => {
-  btn.onclick = () => {
-    const addVal = Number(btn.dataset.note);
-    const curVal = Number($('cashReceived').value || 0);
-    $('cashReceived').value = curVal + addVal;
-    updateChange();
   };
-});
+  $('mc').onclick=()=>{mode='cash';draw()};$('mq').onclick=()=>{mode='qr';draw()};draw();
+};
 
-function renderDynamicQr(amount) {
-  const qrEl = $('qrcode');
-  qrEl.innerHTML = '';
-  const shopName = qrConfig.accountName || qrConfig.bankName || 'ร้านค้า (LAO QR)';
-  const accInfo = qrConfig.accountNo ? ' (' + qrConfig.accountNo + ')' : '';
-  $('qrShopInfo').textContent = shopName + accInfo;
-  $('qrAmountLabel').textContent = 'ยอดโอน: ' + kip(amount);
+/* รับเข้า */
+function fillIn(){
+  const p=S.products.find(x=>x.sku===$('ik').value.trim());
+  $('ii').textContent=p?`${p.name} · ສະຕັອກ ${p.stock} · ${fmt(p.price)}`:($('ik').value.trim()?(isA()?'ສິນຄ້າໃໝ່: ໃສ່ຊື່ ແລະ ລາຄາ':'ບໍ່ພົບສິນຄ້າ (ຜູ້ຈັດການເປັນຜູ້ເພີ່ມສິນຄ້າໃໝ່)'):'');
+  if(p){$('iname').value=p.name;$('iprice').value=p.price;$('imin').value=p.minStock;$('icat').value=p.category}
+}
+$('ik').oninput=fillIn;$('is').onclick=()=>scan(c=>{$('ik').value=c;fillIn();closeScan()});
+$('ib').onclick=async()=>{
+  const sku=$('ik').value.trim(),qty=Number($('iq').value);
+  if(!sku||!Number.isInteger(qty)||qty<=0)return toast('ໃສ່ SKU ແລະ ຈຳນວນໃຫ້ຖືກ',1);
+  $('ib').disabled=true;
+  try{
+    const it={sku,qty};
+    if(isA()){if($('iname').value.trim())it.name=$('iname').value.trim();if($('iprice').value!=='')it.price=dig($('iprice').value);
+      if($('imin').value!=='')it.minStock=dig($('imin').value);if($('icat').value.trim())it.category=$('icat').value.trim()}
+    const r=await api('stockIn',{requestId:uid(),items:[it]});
+    toast(r.message);['ik','iname','iprice','imin','icat'].forEach(i=>$(i).value='');$('iq').value=1;$('ii').textContent='';await load();
+  }catch(e){toast(e.message,1)}
+  $('ib').disabled=false;
+};
 
-  let qrPayload = '';
-  if (qrConfig.emvPayload) {
-    qrPayload = buildEmvWithAmount(qrConfig.emvPayload, amount);
-  } else {
-    qrPayload = 'LAOQR|ACC:' + (qrConfig.accountNo || 'SHOP') + '|AMT:' + amount + '|CCY:LAK';
-  }
-
-  new QRCode(qrEl, {
-    text: qrPayload,
-    width: 210,
-    height: 210,
-    correctLevel: QRCode.CorrectLevel.M
+/* สินค้า */
+function renderProd(){
+  const q=$('ps').value.trim().toLowerCase(),lw=$('lw').checked;
+  const l=S.products.filter(p=>(!q||p.sku.toLowerCase().includes(q)||p.name.toLowerCase().includes(q))&&(!lw||p.stock<=p.minStock));
+  $('pl').innerHTML=l.length?l.map(p=>`<div class="c r" data-k="${esc(p.sku)}"><div><b>${esc(p.name)}</b>
+    <div class="m">${esc(p.sku)} · ${esc(p.category)} · ${fmt(p.price)}</div></div><div class="${p.stock<=p.minStock?'low':''}">${p.stock.toLocaleString('en-US')}</div></div>`).join(''):'<p class="m">ບໍ່ພົບສິນຄ້າ</p>';
+}
+$('ps').oninput=renderProd;$('lw').onchange=renderProd;
+$('pl').onclick=e=>{
+  if(!isA())return;const d=e.target.closest('[data-k]');if(!d)return;
+  const p=S.products.find(x=>x.sku===d.dataset.k);
+  modal('ແກ້ໄຂສິນຄ້າ',['ຊື່|n|'+p.name,'ລາຄາ (₭)|p|'+p.price,'ສະຕັອກ|s|'+p.stock,'ສະຕັອກຂັ້ນຕ່ຳ|m|'+p.minStock,'ໝວດໝູ່|c|'+p.category]
+    .map(x=>{const[a,i,v]=x.split('|');return `<div class="m">${a}</div><input id="e${i}" value="${esc(v)}">`}).join(''),'ບັນທຶກ',async()=>{
+    await api('adminAdjust',{sku:p.sku,name:$('en').value,price:dig($('ep').value),stock:dig($('es').value),minStock:dig($('em').value),category:$('ec').value});
+    closeM;closeM();toast('ບັນທຶກແລ້ວ');await load();
   });
-}
-
-function buildEmvWithAmount(baseEmv, amount) {
-  try {
-    let raw = baseEmv.replace(/6304[0-9A-Fa-f]{4}$/, '');
-    const amtStr = String(Math.round(amount));
-    const tag54 = '54' + String(amtStr.length).padStart(2, '0') + amtStr;
-    if (/54\d{2}\d+/.test(raw)) {
-      raw = raw.replace(/54\d{2}\d+/, tag54);
-    } else {
-      raw += tag54;
-    }
-    raw += '6304';
-    return raw + crc16Ccitt(raw);
-  } catch (e) {
-    return baseEmv;
-  }
-}
-
-function crc16Ccitt(str) {
-  let crc = 0xFFFF;
-  for (let i = 0; i < str.length; i++) {
-    crc ^= str.charCodeAt(i) << 8;
-    for (let j = 0; j < 8; j++) {
-      crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
-    }
-  }
-  return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
-}
-
-$('confirmCheckoutBtn').onclick = async () => {
-  if (!cart.length || busy) return;
-  const due = getCartTotal();
-  const rec = Number($('cashReceived').value || 0);
-
-  if (payMode === 'cash' && rec > 0 && rec < due) {
-    toast('รับเงินสดมายังไม่ครบตามยอดขาย', 'bad');
-    return;
-  }
-
-  busy = true;
-  $('confirmCheckoutBtn').disabled = true;
-  try {
-    pendingId = pendingId || newId();
-    const note = payMode === 'qr'
-      ? 'ชำระผ่าน QR ธนาคาร'
-      : ('เงินสด รับ ' + kip(rec || due) + ' ทอน ' + kip(Math.max(0, (rec || due) - due)));
-
-    const r = await api('checkout', {
-      requestId: pendingId,
-      items: cart.map(l => ({ sku: l.sku, qty: l.qty })),
-      note: note
-    });
-
-    $('payModal').hidden = true;
-    toast(r.duplicate ? 'รายการนี้บันทึกแล้ว' : ('ขายสำเร็จ ยอด ' + kip(r.total)), 'ok');
-    cart = [];
-    pendingId = null;
-    await loadProducts();
-    renderCart();
-  } catch (e) {
-    toast(e.message, 'bad');
-  } finally {
-    busy = false;
-    $('confirmCheckoutBtn').disabled = false;
-  }
 };
 
-function updateInInfo() {
-  const sku = $('inSku').value.trim();
-  const p = products.find(x => x.sku === sku);
-  const isAdmin = currentUser && currentUser.role === 'admin';
-
-  if (!sku) {
-    $('inInfo').textContent = '';
-    $('newProductFields').hidden = true;
-    return;
-  }
-
-  if (p) {
-    $('inInfo').innerHTML = '<span style="color:#059669">✅ พบสินค้าเดิม: ' + esc(p.name) + ' (คงเหลือ ' + p.stock + ' ชิ้น • ' + kip(p.price) + ') — ใส่แค่จำนวนแล้วกดบันทึกได้เลย</span>';
-    $('newProductFields').hidden = true;
-  } else {
-    if (isAdmin) {
-      $('inInfo').innerHTML = '<span style="color:#d97706">🆕 สินค้าใหม่: กรุณากรอกข้อมูลด้านล่างครั้งแรก</span>';
-      $('newProductFields').hidden = false;
-    } else {
-      $('inInfo').innerHTML = '<span style="color:#dc2626">⛔ ไม่พบรหัสสินค้านี้ (พนักงานเพิ่มสินค้าใหม่เองไม่ได้ กรุณาแจ้งผู้จัดการ)</span>';
-      $('newProductFields').hidden = true;
-    }
-  }
+/* บิล / คืนสินค้า */
+async function loadBills(){
+  $('bl').innerHTML='<p class="m">ກຳລັງໂຫຼດ...</p>';
+  try{
+    S.bills=(await api('bills',{limit:20,search:$('bq').value})).bills;
+    $('bl').innerHTML=S.bills.length?S.bills.map((b,i)=>`<div class="c"><div class="r"><div><b>${fmt(b.total)}</b> <span class="m">${MT[b.method]||''}</span>
+      <div class="m">${esc(b.time)} · ${esc(b.user)}</div></div><span class="low">${ST[b.status]||''}</span></div>
+      ${b.items.map(it=>`<div class="r m"><span>${esc(it.name)} × ${it.remaining}/${it.qty}</span>${it.remaining>0?`<button class="sm s" data-a="r" data-i="${i}" data-s="${esc(it.sku)}">ຮັບຄືນ</button>`:''}</div>`).join('')}
+      ${b.status!=='voided'?`<button class="d" data-a="v" data-i="${i}">ຍົກເລີກທັງບິນ</button>`:''}</div>`).join(''):'<p class="m">ບໍ່ພົບບິນ</p>';
+  }catch(e){$('bl').innerHTML='';toast(e.message,1)}
 }
-$('inSku').addEventListener('input', updateInInfo);
-$('inScan').onclick = () => openScan(code => {
-  $('inSku').value = code;
-  updateInInfo();
-  closeScan();
-});
-
-$('inSubmit').onclick = async () => {
-  if (busy) return;
-  const sku = $('inSku').value.trim();
-  const qty = Number($('inQty').value);
-  if (!sku || !Number.isInteger(qty) || qty <= 0) {
-    toast('กรุณาสแกนบาร์โค้ดและระบุจำนวนที่ถูกต้อง', 'bad');
-    return;
-  }
-  const exists = products.some(x => x.sku === sku);
-  if (!exists && (!$('inName').value.trim() || $('inPrice').value === '')) {
-    toast('สินค้าใหม่ต้องกรอกชื่อและราคาขาย', 'bad');
-    return;
-  }
-
-  busy = true;
-  $('inSubmit').disabled = true;
-  try {
-    const item = { sku, qty };
-    if (!exists) {
-      item.name = $('inName').value.trim();
-      item.price = Number($('inPrice').value);
-      item.category = $('inCategory').value.trim() || 'ทั่วไป';
-      item.minStock = Number($('inMin').value || 5);
-    }
-    const r = await api('stockIn', { requestId: newId(), items: [item] });
-    toast(r.message || 'รับเข้าสต็อกสำเร็จ', 'ok');
-    ['inSku', 'inName', 'inPrice', 'inCategory'].forEach(id => $(id).value = '');
-    $('inMin').value = 5;
-    $('inQty').value = 1;
-    $('inInfo').textContent = '';
-    $('newProductFields').hidden = true;
-    await loadProducts();
-  } catch (e) {
-    toast(e.message, 'bad');
-  } finally {
-    busy = false;
-    $('inSubmit').disabled = false;
-  }
+$('bs').onclick=loadBills;
+$('bl').onclick=e=>{
+  const a=e.target.dataset.a;if(!a)return;
+  const b=S.bills[e.target.dataset.i],sku=a==='r'?e.target.dataset.s:null,it=sku&&b.items.find(x=>x.sku===sku);
+  modal(sku?'ຮັບຄືນ: '+it.name:'ຍົກເລີກບິນ '+fmt(b.total),(sku?`<div class="m">ຈຳນວນ (ສູງສຸດ ${it.remaining})</div><input id="rq" type="number" inputmode="numeric" min="1" max="${it.remaining}" value="1">`:'')+'<div class="m">ເຫດຜົນ</div><input id="rs">','ຢືນຢັນ',async()=>{
+    const reason=$('rs').value.trim();if(!reason)throw new Error('ກະລຸນາໃສ່ເຫດຜົນ');
+    const d={requestId:uid(),billId:b.billId,reason};
+    if(sku)d.items=[{sku,qty:Number($('rq').value)}];
+    const r=await api(sku?'returnItems':'voidBill',d);
+    modal('ຄືນເງິນລູກຄ້າ',`<div class="tot">${fmt(r.refund)}</div><p class="m">${esc(r.refundNote||'ຄືນເງິນສົດໃຫ້ລູກຄ້າ')}</p>`,'ປິດ',closeM);
+    await load();loadBills();
+  });
 };
 
-function renderStock() {
-  const q = $('stockSearch').value.trim().toLowerCase();
-  const lowOnly = $('lowOnly').checked;
-  const bestOnly = $('bestOnly').checked;
-  const isAdmin = currentUser && currentUser.role === 'admin';
-
-  let list = products
-    .filter(p => !q || p.sku.toLowerCase().includes(q) || p.name.toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q))
-    .filter(p => !lowOnly || p.stock <= p.minStock);
-
-  if (bestOnly) {
-    list = [...list].sort((a, b) => (salesRankMap[b.sku] || 0) - (salesRankMap[a.sku] || 0));
-  }
-
-  $('stockList').innerHTML = list.length ? list.map(p => {
-    const low = p.stock <= p.minStock;
-    const soldCount = salesRankMap[p.sku] || 0;
-    return '<div class="card"><div class="row">' +
-      '<div style="flex:1">' +
-        '<div><b>' + esc(p.name) + '</b> <span class="badge">' + esc(p.category || 'ทั่วไป') + '</span></div>' +
-        '<div class="muted" style="margin-top:3px">' + esc(p.sku) + ' • <b>' + kip(p.price) + '</b></div>' +
-        '<div style="margin-top:5px">' +
-          (low ? '<span class="badge low">⚠️ ใกล้หมด (ขั้นต่ำ ' + p.minStock + ')</span> ' : '') +
-          (soldCount > 0 ? '<span class="badge hot">🔥 ขายแล้ว ' + soldCount + ' ชิ้น</span>' : '') +
-        '</div>' +
-      '</div>' +
-      '<div style="text-align:right">' +
-        '<div style="font-size:20px;font-weight:800;color:' + (low ? '#dc2626' : '#0f172a') + '">' + p.stock + '</div>' +
-        '<div class="muted">คงเหลือ</div>' +
-        (isAdmin ? '<button class="small outline" style="margin-top:6px" onclick="openEditProduct(\'' + esc(p.sku) + '\')">แก้ไข</button>' : '') +
-      '</div>' +
-    '</div></div>';
-  }).join('') : '<div class="card"><p class="muted" style="text-align:center">ไม่พบรายการสินค้า</p></div>';
+/* ประวัติ */
+async function loadHist(){
+  try{
+    const l=(await api('history',{limit:60})).logs;
+    $('hl').innerHTML=l.length?l.map(x=>`<div class="c r"><div><b>${T[x.type]||esc(x.type)}</b> ${esc(x.name)}
+      <div class="m">${esc(x.timestamp)} · ${esc(x.user)}${x.note?' · '+esc(x.note):''}</div></div>
+      <div style="text-align:right">${x.qty.toLocaleString('en-US')}<div class="m">${x.total?fmt(x.total):''}</div></div></div>`).join(''):'<p class="m">ຍັງບໍ່ມີປະຫວັດ</p>';
+  }catch(e){toast(e.message,1)}
 }
-$('stockSearch').addEventListener('input', renderStock);
-$('lowOnly').addEventListener('change', renderStock);
-$('bestOnly').addEventListener('change', renderStock);
+$('hr').onclick=loadHist;
 
-window.openEditProduct = function(sku) {
-  const p = products.find(x => x.sku === sku);
-  if (!p) return;
-  $('editSku').value = p.sku;
-  $('editName').value = p.name;
-  $('editPrice').value = p.price;
-  $('editStock').value = p.stock;
-  $('editMin').value = p.minStock;
-  $('editCat').value = p.category || 'ทั่วไป';
-  $('editModal').hidden = false;
-};
-$('closeEditBtn').onclick = () => { $('editModal').hidden = true; };
-
-$('saveEditBtn').onclick = async () => {
-  if (busy) return;
-  busy = true;
-  $('saveEditBtn').disabled = true;
-  try {
-    const r = await api('adminAdjust', {
-      sku: $('editSku').value,
-      name: $('editName').value,
-      price: Number($('editPrice').value),
-      stock: Number($('editStock').value),
-      minStock: Number($('editMin').value),
-      category: $('editCat').value
-    });
-    $('editModal').hidden = true;
-    toast(r.message, 'ok');
-    await loadProducts();
-  } catch (e) {
-    toast(e.message, 'bad');
-  } finally {
-    busy = false;
-    $('saveEditBtn').disabled = false;
-  }
+/* รายงาน */
+$('rg').onclick=async()=>{
+  try{
+    const a=(await api('analytics',{month:$('rm').value})).analytics;
+    const bars=(l,k,n)=>{const mx=Math.max(1,...l.map(x=>x[k]));return l.map(x=>`<div class="r"><span>${esc(x[n])}</span><b>${fmt(x[k])}</b></div><div class="bar" style="width:${Math.max(2,x[k]/mx*100)}%"></div>`).join('')||'<p class="m">-</p>'};
+    $('rb').innerHTML=`<div class="c"><div class="m">ຍອດຂາຍສຸດທິ</div><div class="tot">${fmt(a.totalRevenue)}</div>
+      <div class="m">ຍອດຂາຍ ${fmt(a.grossSales)} · ຮັບຄືນ ${fmt(a.totalRefunds)}<br>${a.totalBills} ບິນ · ${a.totalItemsSold.toLocaleString('en-US')} ຊິ້ນ</div></div>
+      <div class="c"><b>ໝວດໝູ່</b>${bars(a.categories,'revenue','category')}</div>
+      <div class="c"><b>ວິທີຊຳລະ</b>${bars(a.paymentMethods.map(x=>({...x,method:MT[x.method]||x.method})),'revenue','method')}</div>
+      <div class="c"><b>ສິນຄ້າຂາຍດີ</b>${a.topProducts.map((x,i)=>`<div class="r"><span>${i+1}. ${esc(x.name)}</span><span>${x.qty} ຊິ້ນ · ${fmt(x.revenue)}</span></div>`).join('')||'<p class="m">-</p>'}</div>`;
+  }catch(e){toast(e.message,1)}
 };
 
-async function loadHistory() {
-  $('histList').innerHTML = '<p class="muted" style="text-align:center">กำลังโหลด...</p>';
-  try {
-    const r = await api('history', { limit: 60 });
-    const rank = {};
-    r.logs.forEach(l => {
-      if (l.type === 'OUT') rank[l.sku] = (rank[l.sku] || 0) + l.qty;
-    });
-    salesRankMap = rank;
-
-    $('histList').innerHTML = r.logs.length ? r.logs.map(l =>
-      '<div class="card"><div class="row">' +
-      '<div><b>' + (l.type === 'IN' ? '➕ รับเข้า' : '➖ ขาย') + '</b> ' + esc(l.name) +
-      '<div class="muted">' + esc(l.timestamp) + ' • โดย: ' + esc(l.user) + '</div>' +
-      (l.note ? '<div class="muted">' + esc(l.note) + '</div>' : '') +
-      '</div>' +
-      '<div style="text-align:right"><b>' + l.qty + ' ชิ้น</b><div class="muted">' + kip(l.total) + '</div></div>' +
-      '</div></div>'
-    ).join('') : '<div class="card"><p class="muted" style="text-align:center">ยังไม่มีประวัติ</p></div>';
-  } catch (e) {
-    $('histList').innerHTML = '';
-    toast(e.message, 'bad');
-  }
+/* ตั้งค่า QR */
+function fillSet(){
+  if(!isA())return;
+  $('cb').value=S.qr.bankName||'';$('cn').value=S.qr.accountName||'';$('ca').value=S.qr.accountNo||'';
+  $('cst').textContent=S.qr.hasPayload?'ຕັ້ງຄ່າ QR ແລ້ວ (ວາງຂໍ້ຄວາມໃໝ່ເພື່ອປ່ຽນ)':'ຍັງບໍ່ໄດ້ຕັ້ງຄ່າ QR';
 }
-$('histReload').onclick = loadHistory;
-
-async function loadReport() {
-  try {
-    const r = await api('analytics', { month: $('reportMonth').value });
-    const a = r.analytics;
-    $('repRev').textContent = kip(a.totalRevenue);
-    $('repQty').textContent = a.totalItemsSold.toLocaleString('en-US') + ' ชิ้น';
-
-    const colors = ['#2563eb', '#059669', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#db2777'];
-    const labels = a.categories.map(c => c.category);
-    const values = a.categories.map(c => c.revenue);
-
-    if (catChartInstance) catChartInstance.destroy();
-    const ctx = $('catChart').getContext('2d');
-    catChartInstance = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: labels.length ? labels : ['ยังไม่มีข้อมูล'],
-        datasets: [{
-          data: values.length ? values : [1],
-          backgroundColor: values.length ? colors : ['#e2e8f0'],
-          borderWidth: 2
-        }]
-      },
-      options: {
-        plugins: { legend: { display: false } }
-      }
-    });
-
-    $('catLegend').innerHTML = a.categories.length ? a.categories.map((c, idx) =>
-      '<div class="row" style="padding:5px 0;border-bottom:1px solid #f1f5f9">' +
-      '<span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:' + colors[idx % colors.length] + ';margin-right:6px"></span>' + esc(c.category) + '</span>' +
-      '<b>' + kip(c.revenue) + '</b></div>'
-    ).join('') : '<p class="muted" style="text-align:center">ยังไม่มียอดขายในเดือนนี้</p>';
-
-    $('topProdList').innerHTML = a.topProducts.length ? a.topProducts.map((p, idx) =>
-      '<div class="row" style="padding:6px 0;border-bottom:1px solid #f1f5f9">' +
-      '<div><b>#' + (idx + 1) + ' ' + esc(p.name) + '</b> <span class="badge">' + esc(p.category) + '</span></div>' +
-      '<div style="text-align:right"><b>' + p.qty + ' ชิ้น</b><div class="muted">' + kip(p.revenue) + '</div></div></div>'
-    ).join('') : '<p class="muted" style="text-align:center">ยังไม่มีข้อมูลสินค้าขายดี</p>';
-  } catch (e) {
-    toast(e.message, 'bad');
-  }
-}
-$('loadReportBtn').onclick = loadReport;
-
-$('saveQrBtn').onclick = async () => {
-  if (busy) return;
-  busy = true;
-  $('saveQrBtn').disabled = true;
-  try {
-    const r = await api('saveQrConfig', {
-      bankName: $('cfgBank').value,
-      accountNo: $('cfgAccNo').value,
-      accountName: $('cfgAccName').value,
-      emvPayload: $('cfgEmv').value
-    });
-    qrConfig = r.qrConfig;
-    toast(r.message, 'ok');
-  } catch (e) {
-    toast(e.message, 'bad');
-  } finally {
-    busy = false;
-    $('saveQrBtn').disabled = false;
-  }
+$('cs').onclick=async()=>{
+  try{
+    const r=await api('saveQrConfig',{bankName:$('cb').value,accountName:$('cn').value,accountNo:$('ca').value,emvPayload:$('ce').value});
+    $('ce').value='';S.qr=r.qrConfig;fillSet();toast(r.message);
+  }catch(e){toast(e.message,1)}
 };
 
-if (session && currentUser) {
-  startApp().catch(showLogin);
-}
+if(S.session&&S.user)start().catch(out);
 </script>
 </body>
 </html>
