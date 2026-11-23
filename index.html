@@ -288,7 +288,7 @@
 <div id="toast"></div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbxCH4C7RjF1r06OSUIDI1wabqaYI5MI8V2IMFTr7oqyFUNvZguBwP6CCwJc2WZtIzR_bQ/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxZ3dBXgrrTmzl7Iyle_TfrKMnMvwKQFC-HKtdt9dEr2M5j0LsSHl_DCbId03e1M8v25w/exec';
 
 let session = sessionStorage.getItem('pos_session_v2') || '';
 let currentUser = JSON.parse(sessionStorage.getItem('pos_user_v2') || 'null');
@@ -739,4 +739,200 @@ $('inSubmit').onclick = async () => {
 
   busy = true;
   $('inSubmit').disabled = true;
-  try
+  try {
+    const item = { sku, qty };
+    if (!exists) {
+      item.name = $('inName').value.trim();
+      item.price = Number($('inPrice').value);
+      item.category = $('inCategory').value.trim() || 'ทั่วไป';
+      item.minStock = Number($('inMin').value || 5);
+    }
+    const r = await api('stockIn', { requestId: newId(), items: [item] });
+    toast(r.message || 'รับเข้าสต็อกสำเร็จ', 'ok');
+    ['inSku', 'inName', 'inPrice', 'inCategory'].forEach(id => $(id).value = '');
+    $('inMin').value = 5;
+    $('inQty').value = 1;
+    $('inInfo').textContent = '';
+    $('newProductFields').hidden = true;
+    await loadProducts();
+  } catch (e) {
+    toast(e.message, 'bad');
+  } finally {
+    busy = false;
+    $('inSubmit').disabled = false;
+  }
+};
+
+function renderStock() {
+  const q = $('stockSearch').value.trim().toLowerCase();
+  const lowOnly = $('lowOnly').checked;
+  const bestOnly = $('bestOnly').checked;
+  const isAdmin = currentUser && currentUser.role === 'admin';
+
+  let list = products
+    .filter(p => !q || p.sku.toLowerCase().includes(q) || p.name.toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q))
+    .filter(p => !lowOnly || p.stock <= p.minStock);
+
+  if (bestOnly) {
+    list = [...list].sort((a, b) => (salesRankMap[b.sku] || 0) - (salesRankMap[a.sku] || 0));
+  }
+
+  $('stockList').innerHTML = list.length ? list.map(p => {
+    const low = p.stock <= p.minStock;
+    const soldCount = salesRankMap[p.sku] || 0;
+    return '<div class="card"><div class="row">' +
+      '<div style="flex:1">' +
+        '<div><b>' + esc(p.name) + '</b> <span class="badge">' + esc(p.category || 'ทั่วไป') + '</span></div>' +
+        '<div class="muted" style="margin-top:3px">' + esc(p.sku) + ' • <b>' + kip(p.price) + '</b></div>' +
+        '<div style="margin-top:5px">' +
+          (low ? '<span class="badge low">⚠️ ใกล้หมด (ขั้นต่ำ ' + p.minStock + ')</span> ' : '') +
+          (soldCount > 0 ? '<span class="badge hot">🔥 ขายแล้ว ' + soldCount + ' ชิ้น</span>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div style="text-align:right">' +
+        '<div style="font-size:20px;font-weight:800;color:' + (low ? '#dc2626' : '#0f172a') + '">' + p.stock + '</div>' +
+        '<div class="muted">คงเหลือ</div>' +
+        (isAdmin ? '<button class="small outline" style="margin-top:6px" onclick="openEditProduct(\'' + esc(p.sku) + '\')">แก้ไข</button>' : '') +
+      '</div>' +
+    '</div></div>';
+  }).join('') : '<div class="card"><p class="muted" style="text-align:center">ไม่พบรายการสินค้า</p></div>';
+}
+$('stockSearch').addEventListener('input', renderStock);
+$('lowOnly').addEventListener('change', renderStock);
+$('bestOnly').addEventListener('change', renderStock);
+
+window.openEditProduct = function(sku) {
+  const p = products.find(x => x.sku === sku);
+  if (!p) return;
+  $('editSku').value = p.sku;
+  $('editName').value = p.name;
+  $('editPrice').value = p.price;
+  $('editStock').value = p.stock;
+  $('editMin').value = p.minStock;
+  $('editCat').value = p.category || 'ทั่วไป';
+  $('editModal').hidden = false;
+};
+$('closeEditBtn').onclick = () => { $('editModal').hidden = true; };
+
+$('saveEditBtn').onclick = async () => {
+  if (busy) return;
+  busy = true;
+  $('saveEditBtn').disabled = true;
+  try {
+    const r = await api('adminAdjust', {
+      sku: $('editSku').value,
+      name: $('editName').value,
+      price: Number($('editPrice').value),
+      stock: Number($('editStock').value),
+      minStock: Number($('editMin').value),
+      category: $('editCat').value
+    });
+    $('editModal').hidden = true;
+    toast(r.message, 'ok');
+    await loadProducts();
+  } catch (e) {
+    toast(e.message, 'bad');
+  } finally {
+    busy = false;
+    $('saveEditBtn').disabled = false;
+  }
+};
+
+async function loadHistory() {
+  $('histList').innerHTML = '<p class="muted" style="text-align:center">กำลังโหลด...</p>';
+  try {
+    const r = await api('history', { limit: 60 });
+    const rank = {};
+    r.logs.forEach(l => {
+      if (l.type === 'OUT') rank[l.sku] = (rank[l.sku] || 0) + l.qty;
+    });
+    salesRankMap = rank;
+
+    $('histList').innerHTML = r.logs.length ? r.logs.map(l =>
+      '<div class="card"><div class="row">' +
+      '<div><b>' + (l.type === 'IN' ? '➕ รับเข้า' : '➖ ขาย') + '</b> ' + esc(l.name) +
+      '<div class="muted">' + esc(l.timestamp) + ' • โดย: ' + esc(l.user) + '</div>' +
+      (l.note ? '<div class="muted">' + esc(l.note) + '</div>' : '') +
+      '</div>' +
+      '<div style="text-align:right"><b>' + l.qty + ' ชิ้น</b><div class="muted">' + kip(l.total) + '</div></div>' +
+      '</div></div>'
+    ).join('') : '<div class="card"><p class="muted" style="text-align:center">ยังไม่มีประวัติ</p></div>';
+  } catch (e) {
+    $('histList').innerHTML = '';
+    toast(e.message, 'bad');
+  }
+}
+$('histReload').onclick = loadHistory;
+
+async function loadReport() {
+  try {
+    const r = await api('analytics', { month: $('reportMonth').value });
+    const a = r.analytics;
+    $('repRev').textContent = kip(a.totalRevenue);
+    $('repQty').textContent = a.totalItemsSold.toLocaleString('en-US') + ' ชิ้น';
+
+    const colors = ['#2563eb', '#059669', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#db2777'];
+    const labels = a.categories.map(c => c.category);
+    const values = a.categories.map(c => c.revenue);
+
+    if (catChartInstance) catChartInstance.destroy();
+    const ctx = $('catChart').getContext('2d');
+    catChartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: labels.length ? labels : ['ยังไม่มีข้อมูล'],
+        datasets: [{
+          data: values.length ? values : [1],
+          backgroundColor: values.length ? colors : ['#e2e8f0'],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    $('catLegend').innerHTML = a.categories.length ? a.categories.map((c, idx) =>
+      '<div class="row" style="padding:5px 0;border-bottom:1px solid #f1f5f9">' +
+      '<span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:' + colors[idx % colors.length] + ';margin-right:6px"></span>' + esc(c.category) + '</span>' +
+      '<b>' + kip(c.revenue) + '</b></div>'
+    ).join('') : '<p class="muted" style="text-align:center">ยังไม่มียอดขายในเดือนนี้</p>';
+
+    $('topProdList').innerHTML = a.topProducts.length ? a.topProducts.map((p, idx) =>
+      '<div class="row" style="padding:6px 0;border-bottom:1px solid #f1f5f9">' +
+      '<div><b>#' + (idx + 1) + ' ' + esc(p.name) + '</b> <span class="badge">' + esc(p.category) + '</span></div>' +
+      '<div style="text-align:right"><b>' + p.qty + ' ชิ้น</b><div class="muted">' + kip(p.revenue) + '</div></div></div>'
+    ).join('') : '<p class="muted" style="text-align:center">ยังไม่มีข้อมูลสินค้าขายดี</p>';
+  } catch (e) {
+    toast(e.message, 'bad');
+  }
+}
+$('loadReportBtn').onclick = loadReport;
+
+$('saveQrBtn').onclick = async () => {
+  if (busy) return;
+  busy = true;
+  $('saveQrBtn').disabled = true;
+  try {
+    const r = await api('saveQrConfig', {
+      bankName: $('cfgBank').value,
+      accountNo: $('cfgAccNo').value,
+      accountName: $('cfgAccName').value,
+      emvPayload: $('cfgEmv').value
+    });
+    qrConfig = r.qrConfig;
+    toast(r.message, 'ok');
+  } catch (e) {
+    toast(e.message, 'bad');
+  } finally {
+    busy = false;
+    $('saveQrBtn').disabled = false;
+  }
+};
+
+if (session && currentUser) {
+  startApp().catch(showLogin);
+}
+</script>
+</body>
+</html>
